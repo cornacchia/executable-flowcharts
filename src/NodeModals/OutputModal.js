@@ -5,6 +5,7 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
+import { Trash } from 'react-bootstrap-icons'
 import SelectParents from './SelectParents'
 import AddChildButtons from './AddChildButtons'
 
@@ -17,19 +18,19 @@ const baseState = {
   disabledParents: null,
   currentlySelectedParents: [],
 
-  // Condition
-  condition: '',
+  // Output
+  output: '',
   okToAddNode: false
 }
 
-class ConditionModal extends React.Component {
+class OutputModal extends React.Component {
   constructor (props) {
     super(props)
 
     this.state = _.cloneDeep(baseState)
 
     this.resetState = this.resetState.bind(this)
-    this.updateCondition = this.updateCondition.bind(this)
+    this.updateOutput = this.updateOutput.bind(this)
     this.validate = this.validate.bind(this)
     this.selectParents = this.selectParents.bind(this)
     this.addNode = this.addNode.bind(this)
@@ -53,26 +54,26 @@ class ConditionModal extends React.Component {
     // Parent nodes
     utils.assignParentsOnReset(newState, this.props.node, this.props.nodes, this.props.parents)
 
-    let condition = ''
+    let output = ''
     if (!_.isNil(this.props.node)) {
-      condition = this.props.node.condition
+      output = this.props.node.output
     }
 
-    newState.condition = condition
+    newState.output = output
 
     this.setState(newState)
   }
 
-  updateCondition (ev) {
+  updateOutput (ev) {
     this.setState({
-      condition: ev.target.value
+      output: ev.target.value
     }, this.validate)
   }
 
   validate () {
     let okToGo = true
-    // TODO should parse and validate condition here probably
-    if (this.state.condition === '') okToGo = false
+    // TODO should parse and validate output here probably
+    if (this.state.output === '') okToGo = false
 
     this.setState({
       okToAddNode: okToGo
@@ -86,7 +87,7 @@ class ConditionModal extends React.Component {
   addNode () {
     const data = {
       parents: _.clone(this.state.currentlySelectedParents),
-      condition: _.cloneDeep(this.state.condition)
+      output: _.cloneDeep(this.state.output)
     }
 
     this.props.addNewNodeCallback(data)
@@ -98,7 +99,7 @@ class ConditionModal extends React.Component {
     const data = {
       id: this.props.node.id,
       parents: _.clone(this.state.currentlySelectedParents),
-      condition: _.cloneDeep(this.state.condition)
+      output: _.cloneDeep(this.state.output)
     }
 
     this.props.updateNodeCallback(data)
@@ -117,7 +118,7 @@ class ConditionModal extends React.Component {
             }
             {_.isNil(this.props.node) &&
               <span>
-                Nuovo nodo (condition)
+                Nuovo nodo (output)
               </span>
             }
           </Modal.Title>
@@ -125,11 +126,16 @@ class ConditionModal extends React.Component {
 
         <Modal.Body>
           <Row>
-            <h3>Condizione:</h3>
+            <h3>Output:</h3>
             <Col xs={12}>
-              <Form.Control onChange={this.updateCondition} value={this.state.condition} />
+              <Form.Control onChange={this.updateOutput} value={this.state.output} />
+              <Form.Text muted>
+                Per stampare il valore di una variabile scrivere il nome della variabile preceduto da <strong>$</strong>, ad esempio: <strong>$n</strong>
+              </Form.Text>
             </Col>
           </Row>
+
+          <hr />
 
           <Row>
             <Col xs={12}>
@@ -143,10 +149,8 @@ class ConditionModal extends React.Component {
         <Modal.Footer>
           {!_.isNil(this.props.node) &&
             <div>
-              <h3>Aggiungi successori (Ramo <strong>Yes</strong>):</h3>
-              <AddChildButtons node={this.props.node} addChildCallback={this.props.addChildCallback} branch='yes' />
-              <h3>Aggiungi successori (Ramo <strong>No</strong>):</h3>
-              <AddChildButtons node={this.props.node} addChildCallback={this.props.addChildCallback} branch='no' />
+              <h3>Aggiungi successori:</h3>
+              <AddChildButtons node={this.props.node} addChildCallback={this.props.addChildCallback} branch='main' />
             </div>
           }
 
@@ -167,7 +171,7 @@ class ConditionModal extends React.Component {
   }
 }
 
-ConditionModal.propTypes = {
+OutputModal.propTypes = {
   show: PropTypes.bool,
   closeCallback: PropTypes.func,
   node: PropTypes.object,
@@ -178,4 +182,4 @@ ConditionModal.propTypes = {
   updateNodeCallback: PropTypes.func
 }
 
-export default ConditionModal
+export default OutputModal

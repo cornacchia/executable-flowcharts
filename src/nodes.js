@@ -24,6 +24,10 @@ const NODES = {
   condition: {
     type: 'condition',
     nodeType: 'condition'
+  },
+  output: {
+    type: 'output',
+    nodeType: 'inputoutput'
   }
 }
 
@@ -56,6 +60,11 @@ function getNewNode (type, data) {
     newNode.condition = data.condition
     newNode.children = { yes: -1, no: -1, main: -1 }
     newNode.text = newNodeText
+  } else if (type === 'output') {
+    let newNodeText = '\n'
+    newNodeText += 'output "' + data.output + '"'
+    newNode.output = data.output
+    newNode.text = newNodeText
   }
 
   return newNode
@@ -81,6 +90,11 @@ function updateNodeContents (nodeObj, data) {
     newNodeText += data.condition
     nodeObj.condition = data.condition
     nodeObj.children = { yes: -1, no: -1, main: -1 }
+    nodeObj.text = newNodeText
+  } else if (nodeObj.type === 'output') {
+    let newNodeText = '\n'
+    newNodeText += 'output "' + data.output + '"'
+    nodeObj.output = data.output
     nodeObj.text = newNodeText
   }
 }

@@ -40,6 +40,14 @@ class ExpressionModal extends React.Component {
     this.resetState()
   }
 
+  componentDidUpdate (prevProps) {
+    if (prevProps.node) {
+      // Check if we are adding a child of the same type to a node
+      // we are updating
+      if (_.isNil(this.props.node)) this.resetState()
+    }
+  }
+
   resetState () {
     const newState = _.cloneDeep(baseState)
     // Parent nodes
@@ -122,6 +130,8 @@ class ExpressionModal extends React.Component {
               <Form.Control onChange={this.updateExpression} value={this.state.expression} />
             </Col>
           </Row>
+
+          <hr />
 
           <Row>
             <Col xs={12}>

@@ -9,6 +9,7 @@ import StartModal from './NodeModals/StartModal'
 import VariableModal from './NodeModals/VariableModal'
 import ExpressionModal from './NodeModals/ExpressionModal'
 import ConditionModal from './NodeModals/ConditionModal'
+import OutputModal from './NodeModals/OutputModal'
 import AddChildButtons from './NodeModals/AddChildButtons'
 
 const _ = require('lodash')
@@ -35,7 +36,8 @@ class Flow extends React.Component {
       diagramStr: '',
       selectedNodeObj: null,
       newNodeType: '',
-      newNodeParent: null
+      newNodeParent: null,
+      outputToShow: ''
     }
 
     this.renderDiagram = this.renderDiagram.bind(this)
@@ -49,9 +51,12 @@ class Flow extends React.Component {
     this.addVariableNode = this.addVariableNode.bind(this)
     this.addExpressionNode = this.addExpressionNode.bind(this)
     this.addConditionNode = this.addConditionNode.bind(this)
+    this.addOutputNode = this.addOutputNode.bind(this)
     this.shouldShowStartModal = this.shouldShowStartModal.bind(this)
     this.shouldShowVariableModal = this.shouldShowVariableModal.bind(this)
     this.shouldShowExpressionModal = this.shouldShowExpressionModal.bind(this)
+    this.shouldShowOutputModal = this.shouldShowOutputModal.bind(this)
+    this.showExecutionOutputs = this.showExecutionOutputs.bind(this)
   }
 
   componentDidMount () {
@@ -71,8 +76,21 @@ class Flow extends React.Component {
 
   executeFlowchart () {
     const startNode = _.find(this.state.nodes, { nodeType: 'start' })
-    const res = executer.executeFromNode(startNode, this.state.nodes, { scope: {} })
-    console.log(res.scope)
+    const res = executer.executeFromNode(startNode, this.state.nodes, { scope: {}, outputs: [] })
+
+    console.log(res.scope, res.outputs)
+    this.showExecutionOutputs(res.outputs)
+  }
+
+  showExecutionOutputs (outputs) {
+    let fullOutput = ''
+    let outputCounter = 0
+    for (const output of outputs) {
+      outputCounter += 1
+      fullOutput += '<strong>' + outputCounter + ']</strong> ' + output + '<br />'
+    }
+
+    this.setState({ outputToShow: fullOutput })
   }
 
   renderDiagram () {
@@ -255,6 +273,22 @@ class Flow extends React.Component {
     }, this.renderDiagram)
   }
 
+  addOutputNode (data) {
+    const newOutputNode = nodes.getNewNode('output', data)
+
+    for (const parentInfo of data.parents) {
+      const newNodeParent = _.find(this.state.nodes, { id: parentInfo.id })
+      nodes.connectNodes(newNodeParent, parentInfo.branch, newOutputNode, this.state.nodes)
+    }
+
+    const stateNodes = this.state.nodes
+    stateNodes.push(newOutputNode)
+
+    this.setState({
+      nodes: stateNodes
+    }, this.renderDiagram)
+  }
+
   shouldShowStartModal () {
     return !_.isNil(this.state.selectedNodeObj) &&
       this.state.selectedNodeObj.type === 'start'
@@ -276,6 +310,12 @@ class Flow extends React.Component {
     return (!_.isNil(this.state.selectedNodeObj) &&
     this.state.selectedNodeObj.type === 'condition') ||
     (this.state.newNodeType === 'condition')
+  }
+
+  shouldShowOutputModal () {
+    return (!_.isNil(this.state.selectedNodeObj) &&
+    this.state.selectedNodeObj.type === 'output') ||
+    (this.state.newNodeType === 'output')
   }
 
   render () {
@@ -321,8 +361,7 @@ class Flow extends React.Component {
             <Row style={{ marginTop: '20px' }}>
               <h3>Output</h3>
               <Col xs={12}>
-                <div style={{ width: '100%', height: '500px', border: '5px solid black' }}>
-
+                <div id='outputDiv' dangerouslySetInnerHTML={{__html: this.state.outputToShow}} style={{ width: '100%', height: '500px', border: '5px solid black' }}>
                 </div>
               </Col>
             </Row>
@@ -373,6 +412,19 @@ class Flow extends React.Component {
             closeCallback={this.unselectNode}
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addConditionNode}
+            updateNodeCallback={this.updateNode}
+          />
+        }
+
+        {this.shouldShowOutputModal() &&
+          <OutputModal
+            node={this.state.selectedNodeObj}
+            nodes={this.state.nodes}
+            parents={this.state.selectedNodeParents}
+            show={this.shouldShowOutputModal()}
+            closeCallback={this.unselectNode}
+            addChildCallback={this.addNode}
+            addNewNodeCallback={this.addOutputNode}
             updateNodeCallback={this.updateNode}
           />
         }
