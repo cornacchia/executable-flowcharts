@@ -1,0 +1,54 @@
+const _ = require('lodash')
+const mathjs = require('mathjs')
+const booleanExpression = require('boolean-expression')
+
+function isNumeric (str) {
+  if (typeof str != "string") return false
+  return !isNaN(str) &&
+         !isNaN(parseFloat(str))
+}
+
+function executeFromNode (node, nodes, calcData) {
+  if (node.type === 'end') {
+    return calcData
+  }
+
+  let nextNode = _.find(nodes, { id: node.children.main })
+
+  if (node.type === 'variable') {
+    for (const variable of node.variables) {
+      calcData.scope[variable.name] = variable.value
+    }
+  } else if (node.type === 'expression') {
+    try {
+      mathjs.evaluate(node.expression, calcData.scope)
+    } catch (err) {
+      // TODO give feedback to user
+      console.error(err)
+    }
+  } else if (node.type === 'condition') {
+    var expression = booleanExpression(node.condition)
+    var parsedExpr = expression.toString(function (token) {
+        // console.log('>>', token)
+        if (['<', '>', '==', '(', ')', '+', '-', '/', '*'].indexOf(token) >= 0) return token
+        else if (isNumeric(token)) return token
+        return 'this[' + JSON.stringify(token) + ']'
+    })
+
+    // console.log('eval', parsedExpr)
+
+    const result = function (str) {
+      return eval(str)
+    }.call(calcData.scope, parsedExpr)
+
+    if (result) nextNode = _.find(nodes, { id: node.children.yes })
+    else nextNode = _.find(nodes, { id: node.children.no })
+  }
+
+
+  return executeFromNode(nextNode, nodes, calcData)
+}
+
+module.exports = {
+  executeFromNode
+}
