@@ -64,6 +64,12 @@ function executeFromNode (node, nodes, calcData) {
     calcData.outputs.push(outputStr)
   }
 
+  const memoryStateSnapshot = {
+    id: _.clone(node.id),
+    memory: _.cloneDeep(calcData.scope)
+  }
+
+  calcData.memoryStates.push(memoryStateSnapshot)
 
   return executeFromNode(nextNode, nodes, calcData)
 }

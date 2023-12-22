@@ -157,11 +157,22 @@ function assignParentsOnReset (state, node, nodes, parents) {
   state.currentlySelectedParents = sdParents.currentlySelectedParents
 }
 
+function translateMemoryStateToHtml (memoryState) {
+  let htmlStr = '<p style="font-family=monospace;">'
+  for (const varName in memoryState.memory) {
+    htmlStr += varName + '&nbsp;=&nbsp;' + memoryState.memory[varName].toString() + '<br/>'
+  }
+  htmlStr += '</p>'
+
+  return htmlStr
+}
+
 module.exports = {
   getNodeConnections,
   getParentNodeData,
   getDisabledParents,
   getSelectedAndDisabledParents,
   selectParents,
-  assignParentsOnReset
+  assignParentsOnReset,
+  translateMemoryStateToHtml
 }

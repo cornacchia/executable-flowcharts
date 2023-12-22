@@ -16,6 +16,7 @@ const _ = require('lodash')
 const nodes = require('./nodes')
 const flowOptions = require('./flowOptions')
 const executer = require('./executer')
+const utils = require('./utils')
 
 function checkIfSameParents (oldParents, newParents) {
   if (oldParents.length !== newParents.length) return false
@@ -37,7 +38,8 @@ class Flow extends React.Component {
       selectedNodeObj: null,
       newNodeType: '',
       newNodeParent: null,
-      outputToShow: ''
+      outputToShow: '',
+      memoryStates: []
     }
 
     this.renderDiagram = this.renderDiagram.bind(this)
@@ -56,7 +58,7 @@ class Flow extends React.Component {
     this.shouldShowVariableModal = this.shouldShowVariableModal.bind(this)
     this.shouldShowExpressionModal = this.shouldShowExpressionModal.bind(this)
     this.shouldShowOutputModal = this.shouldShowOutputModal.bind(this)
-    this.showExecutionOutputs = this.showExecutionOutputs.bind(this)
+    this.showExecutionFeedback = this.showExecutionFeedback.bind(this)
   }
 
   componentDidMount () {
@@ -76,21 +78,23 @@ class Flow extends React.Component {
 
   executeFlowchart () {
     const startNode = _.find(this.state.nodes, { nodeType: 'start' })
-    const res = executer.executeFromNode(startNode, this.state.nodes, { scope: {}, outputs: [] })
+    const res = executer.executeFromNode(startNode, this.state.nodes, { scope: {}, outputs: [], memoryStates: [] })
 
     console.log(res.scope, res.outputs)
-    this.showExecutionOutputs(res.outputs)
+
+    this.showExecutionFeedback(res)
   }
 
-  showExecutionOutputs (outputs) {
+  showExecutionFeedback (data) {
+    // Handle "console" output
     let fullOutput = ''
     let outputCounter = 0
-    for (const output of outputs) {
+    for (const output of data.outputs) {
       outputCounter += 1
       fullOutput += '<strong>' + outputCounter + ']</strong> ' + output + '<br />'
     }
 
-    this.setState({ outputToShow: fullOutput })
+    this.setState({ outputToShow: fullOutput, memoryStates: data.memoryStates })
   }
 
   renderDiagram () {
@@ -326,7 +330,7 @@ class Flow extends React.Component {
           <AddChildButtons addChildCallback={this.addNode} node={null} branch='main' />
         </Row>
         <hr />
-        <Row style={{ height: '300px'}}>
+        <Row>
           <Col xs={5}>
             <h3>Diagramma di flusso</h3>
             <div id='flowchartDiv' style={{ height: '100%', overflow: 'scroll' }}></div>
@@ -366,6 +370,20 @@ class Flow extends React.Component {
               </Col>
             </Row>
           </Col>
+        </Row>
+        <hr/>
+        <Row>
+          {this.state.memoryStates.length > 0 &&
+            <h3>Evoluzione della memoria</h3>
+          }
+          {this.state.memoryStates.map((state, idx) => {
+            return (
+              <Col className='memoryStateElement' xs={2} key={idx}>
+                <strong>Ultimo nodo eseguito:&nbsp;{state.id}</strong>
+                <div dangerouslySetInnerHTML={{ __html: utils.translateMemoryStateToHtml(state) }}></div>
+              </Col>
+            )
+          })}
         </Row>
 
         {this.shouldShowStartModal() &&
