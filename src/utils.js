@@ -157,6 +157,26 @@ function assignParentsOnReset (state, node, nodes, parents) {
   state.currentlySelectedParents = sdParents.currentlySelectedParents
 }
 
+function checkIfSameParents (oldParents, newParents) {
+  if (oldParents.length !== newParents.length) return false
+  for (const parent of oldParents) {
+    if (_.isNil(_.find(newParents, { id: parent.id }))) return false
+  }
+
+  return true
+}
+
+function checkIfOnlyAddingParents (oldParents, newParents) {
+  const oldParentsIds = _.map(oldParents, p => { return p.id })
+  const newParentsIds = _.map(newParents, p => { return p.id })
+
+  for (const pId of oldParentsIds) {
+    if (newParentsIds.indexOf(pId) < 0) return false
+  }
+
+  return true
+}
+
 function translateMemoryStateToHtml (memoryState) {
   let htmlStr = '<p style="font-family=monospace;">'
   for (const varName in memoryState.memory) {
@@ -174,5 +194,7 @@ module.exports = {
   getSelectedAndDisabledParents,
   selectParents,
   assignParentsOnReset,
+  checkIfSameParents,
+  checkIfOnlyAddingParents,
   translateMemoryStateToHtml
 }

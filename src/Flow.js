@@ -18,15 +18,6 @@ const flowOptions = require('./flowOptions')
 const executer = require('./executer')
 const utils = require('./utils')
 
-function checkIfSameParents (oldParents, newParents) {
-  if (oldParents.length !== newParents.length) return false
-  for (const parent of oldParents) {
-    if (_.isNil(_.find(newParents, { id: parent.id }))) return false
-  }
-
-  return true
-}
-
 class Flow extends React.Component {
   constructor (props) {
     super(props)
@@ -99,6 +90,7 @@ class Flow extends React.Component {
 
   renderDiagram () {
     const diagramStr = nodes.convertToDiagramStr(this.state.nodes)
+    // console.log('###################')
     // console.log(diagramStr)
 
     this.setState({
@@ -182,51 +174,11 @@ class Flow extends React.Component {
   }
 
   updateNode (data) {
-    const nodeObj = _.find(this.state.nodes, { id: data.id })
-    console.log('Update node contents')
-    nodes.updateNodeContents(nodeObj, data)
+    const allNodes = nodes.updateNode(data, _.cloneDeep(this.state.nodes))
 
-    const previousParents = _.filter(this.state.nodes, n => { return !_.isNil(_.find(nodeObj.parents, { id: n.id })) })
-    const mainChild = _.find(this.state.nodes, { id: nodeObj.children.main })
-    const yesChild = _.find(this.state.nodes, { id: nodeObj.children.yes })
-    const noChild = _.find(this.state.nodes, { id: nodeObj.children.no })
-
-    const newParents = _.filter(this.state.nodes, n => { return !_.isNil(_.find(data.parents, { id: n.id })) })
-
-    // If new parents are the same as before -> do nothing
-    if (checkIfSameParents(previousParents, newParents)) {
-      console.log('Same parents, just re render')
-    } else {
-      // If either yes or no children exists, we can not know to which parent they
-      // should be assigned, so just disconnect them from the diagram for now
-      if (!_.isNil(yesChild) || !_.isNil(noChild)) {
-        if (!_.isNil(yesChild)) {
-          console.log('Yes child, remove')
-          nodeObj.children.yes = -1
-          _.remove(yesChild.parents, p => { return p === nodeObj.id })
-        }
-        if (!_.isNil(noChild)) {
-          console.log('No child, remove')
-          nodeObj.children.no = -1
-          _.remove(noChild.parents, p => { return p === nodeObj.id })
-        }
-      }
-
-      console.log('Remove node from tree and tie up loose strings')
-      nodeObj.children.main = -1
-      for (const parentObj of previousParents) {
-        parentObj.children.main = - 1
-        nodes.connectNodes(parentObj, 'main', mainChild, this.state.nodes)
-      }
-
-      console.log('Insert node in new place')
-      for (const newParentObj of newParents) {
-        nodes.connectNodes(newParentObj, 'main', nodeObj, this.state.nodes)
-      }
-
-    }
-
-    this.renderDiagram()
+    this.setState({
+      nodes: allNodes
+    }, this.renderDiagram)
   }
 
   addVariableNode (data) {

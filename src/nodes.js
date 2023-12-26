@@ -1,4 +1,5 @@
 const _ = require('lodash')
+const utils = require('./utils')
 
 let ID = 0
 
@@ -89,7 +90,7 @@ function updateNodeContents (nodeObj, data) {
     let newNodeText = '\n'
     newNodeText += data.condition
     nodeObj.condition = data.condition
-    nodeObj.children = { yes: -1, no: -1, main: -1 }
+    // nodeObj.children = { yes: -1, no: -1, main: -1 }
     nodeObj.text = newNodeText
   } else if (nodeObj.type === 'output') {
     let newNodeText = '\n'
@@ -100,22 +101,44 @@ function updateNodeContents (nodeObj, data) {
 }
 
 function connectNodes (parent, branch, child, nodes) {
-  // console.log('connect', parent.id, child.id)
+  // console.log('connect', parent.id, child.id, branch)
+
+  // Check if parent and child already connected
+  if (parent.children[branch] === child.id) {
+    // console.log('!!! Already connected')
+    return
+  }
+
+  // Check if parent had previous child on the same branch
   let previousChild = null
   if (parent.children[branch] >= 0) previousChild = _.find(nodes, { id: parent.children[branch] })
+
+  // Actually connect parent with new child
   parent.children[branch] = child.id
+  // Remove previous parent on the branch, if present
+  _.remove(child.parents, { branch: branch })
+  // Add new parent
   child.parents.push({ id: parent.id, branch: branch })
 
-  // TODO handle multiple branches
   if (!_.isNil(previousChild)) {
+    // console.log('!!! There is a previous child')
     if (child.nodeType !== 'condition') connectNodes(child, 'main', previousChild, nodes)
     // else previousChild.parents = _.filter(previousChild.parents, n => { return n.id !== parent.id })
     else connectNodes(child, 'yes', previousChild, nodes)
   } else if (child.nodeType !== 'end' && child.children.main < 0) {
+    // console.log('!!! New child was attached at the end')
     const endNode = _.find(nodes, n => { return n.nodeType === 'end' })
+
     if (child.nodeType !== 'condition') connectNodes(child, 'main', endNode, nodes)
     else connectNodes(child, 'yes', endNode, nodes)
   }
+}
+
+function severChildConnection (nodeObj, branch, nodes) {
+  const childId = _.clone(nodeObj.children[branch])
+  const childObj = _.find(nodes, { id: childId })
+  _.remove(childObj.parents, { id: nodeObj.id, branch: branch })
+  nodeObj.children[branch] = -1
 }
 
 function convertToNodeLine (node) {
@@ -129,12 +152,32 @@ function convertToNodeLine (node) {
   return nodeStr
 }
 
-function convertToConnLine (node) {
+function isAncestorOrSame (origin, node, nodes, visited) {
+  if (visited.indexOf(origin) >= 0) return false
+  visited.push(origin)
+
+  if (origin === node) return true
+
+  const originNode = _.find(nodes, { id: origin })
+  for (const parent of originNode.parents) {
+    if (isAncestorOrSame(parent.id, node, nodes, visited)) return true
+  }
+
+  return false
+}
+
+function convertToConnLine (node, nodes) {
+  // If going "forward" direction should be "bottom"
+  // if going "backward" direction should be "right"
   let connStr = ''
   for (const key in node.children) {
     if (_.isNil(node.children[key]) || node.children[key] < 0) continue
     connStr += node.id
-    if (key !== 'main') connStr += '(' + key + ')'
+    connStr += '('
+    if (key !== 'main') connStr += key + ','
+    if (key === 'no' || isAncestorOrSame(node.id, node.children[key], nodes, [])) connStr += 'right'
+    else connStr += 'bottom'
+    connStr += ')'
     connStr += '->'
     connStr += node.children[key]
     connStr += '\n'
@@ -149,7 +192,7 @@ function convertToDiagramStr (nodes) {
 
   for (const node of nodes) {
     nodeStr += convertToNodeLine(node)
-    connStr += convertToConnLine(node)
+    connStr += convertToConnLine(node, nodes)
   }
 
   const diagramStr = nodeStr + '\n' + connStr
@@ -163,10 +206,79 @@ function initialize (reactThis) {
   }
 }
 
+function updateNode (data, allNodes) {
+  // console.log('Updating node', data.id)
+  const nodeObj = _.find(allNodes, { id: data.id })
+  // console.log('Update node contents', data.id)
+  updateNodeContents(nodeObj, data)
+
+  const previousParentsObjs = _.filter(allNodes, n => { return !_.isNil(_.find(nodeObj.parents, { id: n.id })) })
+  const mainChild = _.find(allNodes, { id: nodeObj.children.main })
+  const yesChild = _.find(allNodes, { id: nodeObj.children.yes })
+  const noChild = _.find(allNodes, { id: nodeObj.children.no })
+
+  const newParents = _.filter(allNodes, n => { return !_.isNil(_.find(data.parents, { id: n.id })) })
+
+  // If new parents are the same as before -> do nothing
+  if (utils.checkIfSameParents(previousParentsObjs, newParents)) {
+    // console.log('Same parents, just re render')
+  } else if (utils.checkIfOnlyAddingParents(previousParentsObjs, newParents)) {
+    // console.log('Just adding a new parent to the list')
+    for (const parent of data.parents) {
+      const newParentObj = _.find(allNodes, n => { return n.id === parent.id })
+      // Only connect new parents
+      if (_.isNil(_.find(previousParentsObjs, p => { return p.id === newParentObj.id}))) {
+        console.log('>> Add', newParentObj.id, 'as parent to', nodeObj.id)
+        connectNodes(newParentObj, parent.branch, nodeObj, allNodes)
+      }
+    }
+  } else {
+    // If either yes or no children exists, we can not know to which parent they
+    // should be assigned, so just disconnect them from the diagram for now
+    if (!_.isNil(yesChild) || !_.isNil(noChild)) {
+      if (!_.isNil(yesChild)) {
+        // console.log('Yes child, remove')
+        nodeObj.children.yes = -1
+        _.remove(yesChild.parents, p => { return p === nodeObj.id })
+      }
+      if (!_.isNil(noChild)) {
+        // console.log('No child, remove')
+        nodeObj.children.no = -1
+        _.remove(noChild.parents, p => { return p === nodeObj.id })
+      }
+    }
+
+    // console.log('Remove node from tree and tie up loose strings')
+    severChildConnection(nodeObj, 'main', allNodes)
+    // nodeObj.children.main = -1
+
+
+    const previousParents = _.cloneDeep(nodeObj.parents)
+    for (const parent of previousParents) {
+      const parentObj = _.find(previousParentsObjs, { id: parent.id })
+      // console.log('Removing from parent', parentObj.id, 'and connecting to', mainChild.id)
+      severChildConnection(parentObj, parent.branch, allNodes)
+      // parentObj.children.main = - 1
+
+      connectNodes(parentObj, parent.branch, mainChild, allNodes)
+    }
+
+    // console.log('Insert node in new place')
+    for (const newParent of data.parents) {
+      const newParentObj = _.find(newParents, { id: newParent.id })
+      connectNodes(newParentObj, newParent.branch, nodeObj, allNodes)
+    }
+  }
+
+  return allNodes
+}
+
 module.exports = {
   initialize,
   getNewNode,
   connectNodes,
   convertToDiagramStr,
-  updateNodeContents
+  updateNodeContents,
+  severChildConnection,
+  updateNode
 }
