@@ -102,8 +102,8 @@ class OutputModal extends React.Component {
       output: _.cloneDeep(this.state.output)
     }
 
-    this.props.updateNodeCallback(data)
-    this.props.closeCallback()
+    this.props.updateNodeCallback(data, this.props.closeCallback)
+    // this.props.closeCallback()
   }
 
   render () {

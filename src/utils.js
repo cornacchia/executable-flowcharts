@@ -187,6 +187,11 @@ function translateMemoryStateToHtml (memoryState) {
   return htmlStr
 }
 
+function getVariableStringRepresentation (type, value) {
+  if (type === 'collection') return JSON.stringify(value)
+  else return value
+}
+
 module.exports = {
   getNodeConnections,
   getParentNodeData,
@@ -196,5 +201,6 @@ module.exports = {
   assignParentsOnReset,
   checkIfSameParents,
   checkIfOnlyAddingParents,
-  translateMemoryStateToHtml
+  translateMemoryStateToHtml,
+  getVariableStringRepresentation
 }

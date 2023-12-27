@@ -101,8 +101,8 @@ class ExpressionModal extends React.Component {
       expression: _.cloneDeep(this.state.expression)
     }
 
-    this.props.updateNodeCallback(data)
-    this.props.closeCallback()
+    this.props.updateNodeCallback(data, this.props.closeCallback)
+    // this.props.closeCallback()
   }
 
   render () {

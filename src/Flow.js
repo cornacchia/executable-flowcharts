@@ -90,8 +90,6 @@ class Flow extends React.Component {
 
   renderDiagram () {
     const diagramStr = nodes.convertToDiagramStr(this.state.nodes)
-    // console.log('###################')
-    // console.log(diagramStr)
 
     this.setState({
       diagramStr: diagramStr
@@ -173,12 +171,12 @@ class Flow extends React.Component {
     }, this.renderDiagram)
   }
 
-  updateNode (data) {
+  updateNode (data, done) {
     const allNodes = nodes.updateNode(data, _.cloneDeep(this.state.nodes))
 
     this.setState({
       nodes: allNodes
-    }, this.renderDiagram)
+    }, done)
   }
 
   addVariableNode (data) {

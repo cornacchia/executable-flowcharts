@@ -45,7 +45,7 @@ function getNewNode (type, data) {
     let newNodeText = '\n'
     for (let i = 0; i < data.variables.length; i++) {
       const variable = data.variables[i]
-      newNodeText += variable.type + ' ' + variable.name + ' = ' + variable.value
+      newNodeText += variable.type + ' ' + variable.name + ' = ' + utils.getVariableStringRepresentation(variable.type, variable.value)
       if (i < data.variables.length - 1) newNodeText += '\n'
     }
     newNode.variables = data.variables
@@ -98,6 +98,8 @@ function updateNodeContents (nodeObj, data) {
     nodeObj.output = data.output
     nodeObj.text = newNodeText
   }
+
+  return nodeObj
 }
 
 function connectNodes (parent, branch, child, nodes) {
@@ -208,9 +210,9 @@ function initialize (reactThis) {
 
 function updateNode (data, allNodes) {
   // console.log('Updating node', data.id)
-  const nodeObj = _.find(allNodes, { id: data.id })
+  let nodeObj = _.find(allNodes, { id: data.id })
   // console.log('Update node contents', data.id)
-  updateNodeContents(nodeObj, data)
+  nodeObj = updateNodeContents(nodeObj, data)
 
   const previousParentsObjs = _.filter(allNodes, n => { return !_.isNil(_.find(nodeObj.parents, { id: n.id })) })
   const mainChild = _.find(allNodes, { id: nodeObj.children.main })

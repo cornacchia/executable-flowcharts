@@ -14,14 +14,10 @@ const utils = require('../utils')
 
 const varNameValidateRegex = /^[a-zA-Z][a-zA-Z\d]*$/
 
-const inputTypeMap = {
-  int: 'number',
-  str: 'text'
-}
-
 const defaultValues = {
   int: 0,
-  str: ''
+  bool: 'true',
+  collection: [0]
 }
 
 const defaultVariableType = 'int'
@@ -48,7 +44,10 @@ class VariableModal extends React.Component {
     this.state = _.cloneDeep(baseState)
 
     this.updateCurrentVariableName = this.updateCurrentVariableName.bind(this)
-    this.updateCurrentVariableValue = this.updateCurrentVariableValue.bind(this)
+    this.updateCurrentVariableValueInt = this.updateCurrentVariableValueInt.bind(this)
+    this.updateCurrentVariableValueBool = this.updateCurrentVariableValueBool.bind(this)
+    this.updateCurrentVariableValueCollection = this.updateCurrentVariableValueCollection.bind(this)
+    this.disableAddVariableButton = this.disableAddVariableButton.bind(this)
     this.addVariable = this.addVariable.bind(this)
     this.removeVariable = this.removeVariable.bind(this)
     this.validate = this.validate.bind(this)
@@ -56,6 +55,7 @@ class VariableModal extends React.Component {
     this.updateNode = this.updateNode.bind(this)
     this.selectParents = this.selectParents.bind(this)
     this.resetState = this.resetState.bind(this)
+    this.changeVariableType = this.changeVariableType.bind(this)
   }
 
   componentDidMount () {
@@ -102,9 +102,48 @@ class VariableModal extends React.Component {
     }
   }
 
-  updateCurrentVariableValue (ev) {
+  disableAddVariableButton () {
+    if (this.state.currentVariableName === '') return true
+    const sameNameVar = _.find(this.state.definedVariables, { name: this.state.currentVariableName })
+    if (!_.isNil(sameNameVar)) return true
+
+    return false
+  }
+
+  updateCurrentVariableValueInt (ev) {
     this.setState({
       currentVariableValue: ev.target.value
+    })
+  }
+
+  updateCurrentVariableValueBool (ev) {
+    this.setState({
+      currentVariableValue: ev.target.value === 'true'
+    })
+  }
+
+  updateCurrentVariableValueCollection (ev) {
+    const newCollectionLength = _.max([ev.target.value, 1])
+    let varValue = this.state.currentVariableValue
+    if (newCollectionLength > varValue.length) {
+      while (varValue.length < newCollectionLength) varValue.push(0)
+    } else if (newCollectionLength < varValue.length) {
+      varValue = []
+      for (let i = 0; i < newCollectionLength; i++) {
+        varValue.push(this.state.currentVariableValue[i])
+      }
+    }
+
+    this.setState({ currentVariableValue: varValue })
+  }
+
+  changeVariableType (evt) {
+    const newVariableType = evt.target.value
+    const newVariableValue = _.clone(defaultValues[newVariableType])
+
+    this.setState({
+      selectedVariableType: newVariableType,
+      currentVariableValue: newVariableValue
     })
   }
 
@@ -169,8 +208,8 @@ class VariableModal extends React.Component {
       variables: _.cloneDeep(this.state.definedVariables)
     }
 
-    this.props.updateNodeCallback(data)
-    this.props.closeCallback()
+    this.props.updateNodeCallback(data, this.props.closeCallback)
+    // this.props.closeCallback()
   }
 
   render () {
@@ -204,7 +243,7 @@ class VariableModal extends React.Component {
                       </Button>
                     </Col>
                     <Col xs={8} style={{ textAlign: 'left' }}>
-                      <strong>{variable.type}&nbsp;{variable.name}&nbsp;=&nbsp;{variable.value}</strong>
+                      <strong>{variable.type}&nbsp;{variable.name}&nbsp;=&nbsp;{utils.getVariableStringRepresentation(variable.type, variable.value)}</strong>
                     </Col>
                   </Row>
                 )
@@ -226,16 +265,49 @@ class VariableModal extends React.Component {
               </Form.Group>
 
               <Form.Group>
-                <Form.Label htmlFor='variableValue'>Valore:</Form.Label>
-                <Form.Control
-                  type={inputTypeMap[this.state.selectedVariableType]}
-                  id='variableValue'
-                  value={this.state.currentVariableValue}
-                  onChange={this.updateCurrentVariableValue}
-                />
+                <Form.Label htmlFor='variableType'>Tipo:</Form.Label>
+                <Form.Select value={this.state.selectedVariableType} onChange={this.changeVariableType}>
+                  <option value='int'>Numero intero</option>
+                  <option value='bool'>Booleano</option>
+                  <option value='collection'>Collezione</option>
+                </Form.Select>
               </Form.Group>
 
-              <Button style={{ marginTop: '20px' }} variant='primary' disabled={this.state.currentVariableName === ''} onClick={this.addVariable}>
+              {this.state.selectedVariableType === 'int' &&
+                <Form.Group>
+                  <Form.Label htmlFor='variableValue'>Valore:</Form.Label>
+                  <Form.Control
+                    type='number'
+                    id='variableValue'
+                    value={this.state.currentVariableValue}
+                    onChange={this.updateCurrentVariableValueInt}
+                  />
+                </Form.Group>
+              }
+
+              {this.state.selectedVariableType === 'bool' &&
+                <Form.Group>
+                  <Form.Label>Valore:</Form.Label>
+                  <Form.Select value={this.state.currentVariableValue.toString()} onChange={this.updateCurrentVariableValueBool}>
+                    <option value='true'>true</option>
+                    <option value='false'>false</option>
+                  </Form.Select>
+                </Form.Group>
+              }
+
+              {this.state.selectedVariableType === 'collection' &&
+                <Form.Group>
+                  <Form.Label>Numero di elementi:</Form.Label>
+                  <Form.Control
+                    type='number'
+                    value={this.state.currentVariableValue.length}
+                    onChange={this.updateCurrentVariableValueCollection}
+                  />
+                </Form.Group>
+              }
+
+
+              <Button style={{ marginTop: '20px' }} variant='primary' disabled={this.disableAddVariableButton()} onClick={this.addVariable}>
                 + Aggiungi variabile al nodo
               </Button>
             </Col>

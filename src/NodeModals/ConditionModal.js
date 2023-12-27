@@ -101,8 +101,8 @@ class ConditionModal extends React.Component {
       condition: _.cloneDeep(this.state.condition)
     }
 
-    this.props.updateNodeCallback(data)
-    this.props.closeCallback()
+    this.props.updateNodeCallback(data, this.props.closeCallback)
+    // this.props.closeCallback()
   }
 
   render () {
