@@ -12,6 +12,8 @@ import AddChildButtons from './AddChildButtons'
 const _ = require('lodash')
 const utils = require('../utils')
 
+const varNameValidateRegex = /^[a-zA-Z][a-zA-Z\d]*$/
+
 const inputTypeMap = {
   int: 'number',
   str: 'text'
@@ -91,10 +93,13 @@ class VariableModal extends React.Component {
   }
 
   updateCurrentVariableName (ev) {
-    // TODO validate name (must start with letter)
-    this.setState({
-      currentVariableName: ev.target.value
-    })
+    const newVarName = ev.target.value.trim()
+
+    if (varNameValidateRegex.test(newVarName)) {
+      this.setState({
+        currentVariableName: ev.target.value
+      })
+    }
   }
 
   updateCurrentVariableValue (ev) {
@@ -212,19 +217,26 @@ class VariableModal extends React.Component {
           <Row>
             <h3>Aggiungi variabile</h3>
             <Col xs={12}>
-              <Form.Label htmlFor='variableName'>Nome:</Form.Label>
-              <Form.Control id='variableName' value={this.state.currentVariableName} onChange={this.updateCurrentVariableName}/>
+              <Form.Group>
+                <Form.Label htmlFor='variableName'>Nome:</Form.Label>
+                <Form.Control id='variableName' value={this.state.currentVariableName} onChange={this.updateCurrentVariableName}/>
+                <Form.Text muted>
+                  Il nome della variabile deve iniziare con una lettera dell'alfabeto e contenere solo lettere e numeri.
+                </Form.Text>
+              </Form.Group>
 
-              <Form.Label htmlFor='variableValue'>Valore:</Form.Label>
-              <Form.Control
-                type={inputTypeMap[this.state.selectedVariableType]}
-                id='variableValue'
-                value={this.state.currentVariableValue}
-                onChange={this.updateCurrentVariableValue}
-              />
+              <Form.Group>
+                <Form.Label htmlFor='variableValue'>Valore:</Form.Label>
+                <Form.Control
+                  type={inputTypeMap[this.state.selectedVariableType]}
+                  id='variableValue'
+                  value={this.state.currentVariableValue}
+                  onChange={this.updateCurrentVariableValue}
+                />
+              </Form.Group>
 
               <Button style={{ marginTop: '20px' }} variant='primary' disabled={this.state.currentVariableName === ''} onClick={this.addVariable}>
-                + Aggiungi al nodo
+                + Aggiungi variabile al nodo
               </Button>
             </Col>
           </Row>
