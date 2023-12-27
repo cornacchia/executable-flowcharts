@@ -180,7 +180,10 @@ function checkIfOnlyAddingParents (oldParents, newParents) {
 function translateMemoryStateToHtml (memoryState) {
   let htmlStr = '<p style="font-family=monospace;">'
   for (const varName in memoryState.memory) {
-    htmlStr += varName + '&nbsp;=&nbsp;' + memoryState.memory[varName].toString() + '<br/>'
+    let varType = 'int'
+    if (typeof memoryState.memory[varName] === 'boolean') varType = 'bool'
+    else if (Array.isArray(memoryState.memory[varName])) varType = 'collection'
+    htmlStr += varName + '&nbsp;=&nbsp;' + getVariableStringRepresentation(varType, memoryState.memory[varName]) + '<br/>'
   }
   htmlStr += '</p>'
 

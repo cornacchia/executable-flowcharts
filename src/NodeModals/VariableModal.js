@@ -56,6 +56,7 @@ class VariableModal extends React.Component {
     this.selectParents = this.selectParents.bind(this)
     this.resetState = this.resetState.bind(this)
     this.changeVariableType = this.changeVariableType.bind(this)
+    this.updateCollectionElement = this.updateCollectionElement.bind(this)
   }
 
   componentDidMount () {
@@ -135,6 +136,15 @@ class VariableModal extends React.Component {
     }
 
     this.setState({ currentVariableValue: varValue })
+  }
+
+  updateCollectionElement (idx, val) {
+    const currCollection = this.state.currentVariableValue
+    currCollection[idx] = parseInt(val)
+
+    this.setState({
+      currentVariableValue: currCollection
+    })
   }
 
   changeVariableType (evt) {
@@ -303,6 +313,22 @@ class VariableModal extends React.Component {
                     value={this.state.currentVariableValue.length}
                     onChange={this.updateCurrentVariableValueCollection}
                   />
+
+                  <Form.Label>Valori iniziali:</Form.Label>
+                  <Row>
+                    {this.state.currentVariableValue.map((el, idx) => {
+                      return (
+                        <Col xs={4} key={idx}>
+                          <Form.Control
+                            type='number'
+                            value={el}
+                            onChange={evt => { this.updateCollectionElement(idx, evt.target.value)}}
+                          />
+                        </Col>
+                      )
+                    })}
+                  </Row>
+
                 </Form.Group>
               }
 

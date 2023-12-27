@@ -2,7 +2,8 @@ const _ = require('lodash')
 const mathjs = require('mathjs')
 const booleanExpression = require('boolean-expression')
 
-const outputVariableRegex = /\$([a-zA-Z]+[a-zA-Z\d]*)/g
+const accessArrayRegex = /^([a-zA-Z][a-zA-Z\d]*)(\[[a-zA-Z\d]{0,}\])$/
+const outputVariableRegex = /\$([a-zA-Z]+[a-zA-Z\d]*)/
 
 function isNumeric (str) {
   if (typeof str != "string") return false
@@ -22,6 +23,7 @@ function executeFromNode (node, nodes, calcData) {
       calcData.scope[variable.name] = variable.value
     }
   } else if (node.type === 'expression') {
+    // TODO use eval here as well
     try {
       mathjs.evaluate(node.expression, calcData.scope)
     } catch (err) {
@@ -31,9 +33,16 @@ function executeFromNode (node, nodes, calcData) {
   } else if (node.type === 'condition') {
     var expression = booleanExpression(node.condition)
     var parsedExpr = expression.toString(function (token) {
-        // console.log('>>', token)
+        console.log('>>', token)
         if (['<', '>', '==', '(', ')', '+', '-', '/', '*'].indexOf(token) >= 0) return token
         else if (isNumeric(token)) return token
+        else if (accessArrayRegex.test(token)) {
+          const match = accessArrayRegex.exec(token)
+          const varName = match[1]
+          const arrayAccess = match[2]
+          return 'this[' + JSON.stringify(varName) + ']' + arrayAccess
+        }
+
         return 'this[' + JSON.stringify(token) + ']'
     })
 
