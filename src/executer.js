@@ -51,12 +51,14 @@ function executeFromNode (node, nodes, calcData) {
       console.error(err)
     }
     */
-    const expression = booleanExpression(node.expression)
-    const parsedExpr = expression.toString(cleanupUserInput)
+    for (const expr of node.expressions) {
+      const expression = booleanExpression(expr)
+      const parsedExpr = expression.toString(cleanupUserInput)
 
-    const result = function (str) {
-      return eval(str)
-    }.call(calcData.scope, parsedExpr)
+      const result = function (str) {
+        return eval(str)
+      }.call(calcData.scope, parsedExpr)
+    }
 
   } else if (node.type === 'condition') {
     const condition = booleanExpression(node.condition)

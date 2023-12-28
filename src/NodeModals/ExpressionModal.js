@@ -86,7 +86,7 @@ class ExpressionModal extends React.Component {
   addNode () {
     const data = {
       parents: _.clone(this.state.currentlySelectedParents),
-      expression: _.cloneDeep(this.state.expression)
+      expressions: [_.cloneDeep(this.state.expression)]
     }
 
     this.props.addNewNodeCallback(data)
@@ -98,7 +98,7 @@ class ExpressionModal extends React.Component {
     const data = {
       id: this.props.node.id,
       parents: _.clone(this.state.currentlySelectedParents),
-      expression: _.cloneDeep(this.state.expression)
+      expressions: [_.cloneDeep(this.state.expression)]
     }
 
     this.props.updateNodeCallback(data, this.props.closeCallback)

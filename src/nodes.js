@@ -32,6 +32,27 @@ const NODES = {
   }
 }
 
+function getNodeText (type, data) {
+  let newNodeText = '\n'
+  if (type === 'variable') {
+    for (let i = 0; i < data.variables.length; i++) {
+      const variable = data.variables[i]
+      newNodeText += variable.type + ' ' + variable.name + ' = ' + utils.getVariableStringRepresentation(variable.type, variable.value)
+      if (i < data.variables.length - 1) newNodeText += '\n'
+    }
+  } else if (type === 'expression') {
+    for (const expression of data.expressions) {
+      newNodeText += expression + '\n'
+    }
+  } else if (type === 'condition') {
+    newNodeText += data.condition
+  } else if (type === 'output') {
+    newNodeText += 'output "' + data.output + '"'
+  }
+
+  return newNodeText
+}
+
 function getNewNode (type, data) {
   if (!NODES[type]) console.error('Not implemented!')
 
@@ -42,30 +63,18 @@ function getNewNode (type, data) {
   newNode.selected = false
 
   if (type === 'variable') {
-    let newNodeText = '\n'
-    for (let i = 0; i < data.variables.length; i++) {
-      const variable = data.variables[i]
-      newNodeText += variable.type + ' ' + variable.name + ' = ' + utils.getVariableStringRepresentation(variable.type, variable.value)
-      if (i < data.variables.length - 1) newNodeText += '\n'
-    }
     newNode.variables = data.variables
-    newNode.text = newNodeText
+    newNode.text = getNodeText(type, data)
   } else if (type === 'expression') {
-    let newNodeText = '\n'
-    newNodeText += data.expression
-    newNode.expression = data.expression
-    newNode.text = newNodeText
+    newNode.expressions = data.expressions
+    newNode.text = getNodeText(type, data)
   } else if (type === 'condition') {
-    let newNodeText = '\n'
-    newNodeText += data.condition
     newNode.condition = data.condition
     newNode.children = { yes: -1, no: -1, main: -1 }
-    newNode.text = newNodeText
+    newNode.text = getNodeText(type, data)
   } else if (type === 'output') {
-    let newNodeText = '\n'
-    newNodeText += 'output "' + data.output + '"'
     newNode.output = data.output
-    newNode.text = newNodeText
+    newNode.text = getNodeText(type, data)
   }
 
   return newNode
@@ -73,30 +82,17 @@ function getNewNode (type, data) {
 
 function updateNodeContents (nodeObj, data) {
   if (nodeObj.type === 'variable') {
-    let newNodeText = '\n'
-    for (let i = 0; i < data.variables.length; i++) {
-      const variable = data.variables[i]
-      newNodeText += variable.type + ' ' + variable.name + ' = ' + variable.value
-      if (i < data.variables.length - 1) newNodeText += '\n'
-    }
     nodeObj.variables = data.variables
-    nodeObj.text = newNodeText
+    nodeObj.text = getNodeText(nodeObj.type, data)
   } else if (nodeObj.type === 'expression') {
-    let newNodeText = '\n'
-    newNodeText += data.expression
-    nodeObj.expression = data.expression
-    nodeObj.text = newNodeText
+    nodeObj.expressions = data.expressions
+    nodeObj.text = getNodeText(nodeObj.type, data)
   } else if (nodeObj.type === 'condition') {
-    let newNodeText = '\n'
-    newNodeText += data.condition
     nodeObj.condition = data.condition
-    // nodeObj.children = { yes: -1, no: -1, main: -1 }
-    nodeObj.text = newNodeText
+    nodeObj.text = getNodeText(nodeObj.type, data)
   } else if (nodeObj.type === 'output') {
-    let newNodeText = '\n'
-    newNodeText += 'output "' + data.output + '"'
     nodeObj.output = data.output
-    nodeObj.text = newNodeText
+    nodeObj.text = getNodeText(nodeObj.type, data)
   }
 
   return nodeObj
