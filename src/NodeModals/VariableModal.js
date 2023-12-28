@@ -13,6 +13,7 @@ const _ = require('lodash')
 const utils = require('../utils')
 
 const varNameValidateRegex = /^[a-zA-Z][a-zA-Z\d]*$/
+const forbiddenNames = ['new', 'var', 'const', 'let', 'function', 'window', 'document', 'cookie']
 
 const defaultValues = {
   int: 0,
@@ -96,7 +97,7 @@ class VariableModal extends React.Component {
   updateCurrentVariableName (ev) {
     const newVarName = ev.target.value.trim()
 
-    if (varNameValidateRegex.test(newVarName)) {
+    if (varNameValidateRegex.test(newVarName) && forbiddenNames.indexOf(newVarName) < 0) {
       this.setState({
         currentVariableName: ev.target.value
       })

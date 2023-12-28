@@ -69,7 +69,7 @@ class Flow extends React.Component {
 
   executeFlowchart () {
     const startNode = _.find(this.state.nodes, { nodeType: 'start' })
-    const res = executer.executeFromNode(startNode, this.state.nodes, { scope: {}, outputs: [], memoryStates: [] })
+    const res = executer.executeFromNode(startNode, this.state.nodes, executer.getNewCalcData())
 
     console.log(res.scope, res.outputs)
 
