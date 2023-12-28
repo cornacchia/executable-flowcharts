@@ -117,6 +117,7 @@ function connectNodes (parent, branch, child, nodes) {
 
   // Actually connect parent with new child
   parent.children[branch] = child.id
+
   // Remove previous parent on the branch, if present
   _.remove(child.parents, { branch: branch })
   // Add new parent
@@ -127,7 +128,7 @@ function connectNodes (parent, branch, child, nodes) {
     if (child.nodeType !== 'condition') connectNodes(child, 'main', previousChild, nodes)
     // else previousChild.parents = _.filter(previousChild.parents, n => { return n.id !== parent.id })
     else connectNodes(child, 'yes', previousChild, nodes)
-  } else if (child.nodeType !== 'end' && child.children.main < 0) {
+  } else if (['end', 'condition'].indexOf(child.nodeType) < 0 && child.children.main < 0) {
     // console.log('!!! New child was attached at the end')
     const endNode = _.find(nodes, n => { return n.nodeType === 'end' })
 
@@ -230,7 +231,7 @@ function updateNode (data, allNodes) {
       const newParentObj = _.find(allNodes, n => { return n.id === parent.id })
       // Only connect new parents
       if (_.isNil(_.find(previousParentsObjs, p => { return p.id === newParentObj.id}))) {
-        console.log('>> Add', newParentObj.id, 'as parent to', nodeObj.id)
+        // console.log('>> Add', newParentObj.id, 'as parent to', nodeObj.id)
         connectNodes(newParentObj, parent.branch, nodeObj, allNodes)
       }
     }
@@ -272,6 +273,7 @@ function updateNode (data, allNodes) {
     }
   }
 
+  // console.dir(allNodes, { depth: undefined })
   return allNodes
 }
 

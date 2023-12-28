@@ -12,7 +12,7 @@ function testUpdateNode (startNodes, updates, expectedNodes) {
     const expectedNode = _.find(expectedNodes, { id: node.id })
     for (const branch in node.children) {
       if (expectedNode.children[branch] !== node.children[branch]) {
-        console.log('[' + node.id + '] Expected child:', expectedNode.children[branch], 'found:', node.children[branch])
+        console.log('[' + node.id + '] Expected child on', branch, ':', expectedNode.children[branch], 'found:', node.children[branch])
         return false
       }
     }
@@ -181,6 +181,25 @@ const TESTS_UPDATE = {
       { id: 5, nodeType: 'operation', children: { main: 2 }, parents: [{ id: 1, branch: 'main' }] },
       { id: 6, nodeType: 'operation', children: { main: 7 }, parents: [{ id: 3, branch: 'no' }] },
       { id: 7, nodeType: 'end', children: { main: -1 }, parents: [{ id: 3, branch: 'yes' }, { id: 6, branch: 'main' }] }
+    ]
+  },
+  update6: {
+    log: 'Double conditional update',
+    f: testUpdateNode,
+    s: [
+      { id: 1, nodeType: 'start', children: { main: 2 }, parents: [] },
+      { id: 2, nodeType: 'condition', children: { main: -1, yes: 3, no: -1 }, parents: [{ id: 1, branch: 'main' }] },
+      { id: 3, nodeType: 'condition', children: { main: -1, yes: 4, no: -1 }, parents: [{ id: 2, branch: 'yes' }] },
+      { id: 4, nodeType: 'end', children: { main: -1 }, parents: [{ id: 3, branch: 'yes' }] }
+    ],
+    u: [
+      { id: 2, parents: [{ id: 1, branch: 'main' }, { id: 3, branch: 'no' }] },
+    ],
+    e: [
+      { id: 1, nodeType: 'start', children: { main: 2 }, parents: [] },
+      { id: 2, nodeType: 'condition', children: { main: -1, yes: 3, no: -1 }, parents: [{ id: 1, branch: 'main' }, { id: 3, branch: 'no' }] },
+      { id: 3, nodeType: 'condition', children: { main: -1, yes: 4, no: 2 }, parents: [{ id: 2, branch: 'yes' }] },
+      { id: 4, nodeType: 'end', children: { main: -1 }, parents: [{ id: 3, branch: 'yes' }] }
     ]
   }
 }

@@ -90,6 +90,7 @@ class Flow extends React.Component {
 
   renderDiagram () {
     const diagramStr = nodes.convertToDiagramStr(this.state.nodes)
+    console.log(diagramStr)
 
     this.setState({
       diagramStr: diagramStr
