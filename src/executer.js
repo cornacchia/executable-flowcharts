@@ -2,7 +2,7 @@ const _ = require('lodash')
 const mathjs = require('mathjs')
 const booleanExpression = require('boolean-expression')
 
-const accessArrayRegex = /^([a-zA-Z][a-zA-Z\d]*)(\[[a-zA-Z\d]{0,}\])$/
+const accessArrayRegex = /^([a-zA-Z][a-zA-Z\d]*)\[([a-zA-Z\d]{0,})\]$/
 const outputVariableRegex = /\$([a-zA-Z]+[a-zA-Z\d]*)/
 
 function getNewCalcData () {
@@ -23,7 +23,9 @@ function cleanupUserInput (token) {
     const match = accessArrayRegex.exec(token)
     const varName = match[1]
     const arrayAccess = match[2]
-    return 'this[' + JSON.stringify(varName) + ']' + arrayAccess
+    let arrayAccessStr = '[' + arrayAccess + ']'
+    if (!isNumeric(arrayAccess)) arrayAccessStr = '[this[' + JSON.stringify(arrayAccess) + ']]'
+    return 'this[' + JSON.stringify(varName) + ']' + arrayAccessStr
   }
 
   return 'this[' + JSON.stringify(token) + ']'

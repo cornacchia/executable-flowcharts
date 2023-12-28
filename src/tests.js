@@ -269,6 +269,28 @@ const TESTS_EXEC = {
         a: [5, 2, 3]
       }
     }
+  },
+  exec5: {
+    log: 'Find max in collection',
+    f: testExecuteNodes,
+    s: [
+      { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
+      { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  [1, 1, 2, 9, 3] }, { name: 'max', value: -1 }, { name: 'i', value: 0 }, { name: 'len', value: 5 } ] },
+      { id: 3, nodeType: 'condition', type: 'condition', children: { main: -1, yes: 4, no: 10 }, parents: [{ id: 2, branch: 'main' }, { id: 6, branch: 'main' }], condition: 'i < len' },
+      { id: 4, nodeType: 'condition', type: 'condition', children: { main: -1, yes: 5, no: 6 }, parents: [{ id: 3, branch: 'yes' }], condition: 'max < a[i]' },
+      { id: 5, nodeType: 'operation', type: 'expression', children: { main: 6 }, parents: [{ id: 4, branch: 'yes' }], expression: 'max = a[i]' },
+      { id: 6, nodeType: 'operation', type: 'expression', children: { main: 3 }, parents: [{ id: 4, branch: 'no' }, { id: 5, branch: 'main' }], expression: 'i = i + 1' },
+      { id: 10, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 3, branch: 'no' }] }
+    ],
+    r: {
+      error: false,
+      scope: {
+        a: [1, 1, 2, 9, 3],
+        max: 9,
+        i: 5,
+        len: 5
+      }
+    }
   }
 }
 
