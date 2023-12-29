@@ -5,6 +5,7 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
+import { Trash } from 'react-bootstrap-icons'
 import SelectParents from './SelectParents'
 import AddChildButtons from './AddChildButtons'
 
@@ -18,9 +19,12 @@ const baseState = {
   currentlySelectedParents: [],
 
   // Expression
-  expression: '',
+  currentExpression: '',
+  expressions: [],
   okToAddNode: false
 }
+
+// TODO allow multiple expressions for node
 
 class ExpressionModal extends React.Component {
   constructor (props) {
@@ -30,6 +34,8 @@ class ExpressionModal extends React.Component {
 
     this.resetState = this.resetState.bind(this)
     this.updateExpression = this.updateExpression.bind(this)
+    this.addExpression = this.addExpression.bind(this)
+    this.removeExpression = this.removeExpression.bind(this)
     this.validate = this.validate.bind(this)
     this.selectParents = this.selectParents.bind(this)
     this.addNode = this.addNode.bind(this)
@@ -65,14 +71,36 @@ class ExpressionModal extends React.Component {
 
   updateExpression (ev) {
     this.setState({
-      expression: ev.target.value
+      currentExpression: ev.target.value
+    }, this.validate)
+  }
+
+  addExpression () {
+    const currentExpression = this.state.currentExpression
+    const expressions = this.state.expressions
+    expressions.push(currentExpression)
+
+    this.setState({
+      currentExpression: '',
+      expressions
+    }, this.validate)
+  }
+
+  removeExpression (idxToRemove) {
+    const expressions = this.state.expressions
+    const newExpressions = _.filter(expressions, (v, idx) => { return idx !== idxToRemove})
+
+    this.setState({
+      expressions: newExpressions
     }, this.validate)
   }
 
   validate () {
     let okToGo = true
+
     // TODO should parse and validate expression here probably
-    if (this.state.expression === '') okToGo = false
+
+    if (this.state.expressions.length === 0) okToGo = false
 
     this.setState({
       okToAddNode: okToGo
@@ -86,7 +114,7 @@ class ExpressionModal extends React.Component {
   addNode () {
     const data = {
       parents: _.clone(this.state.currentlySelectedParents),
-      expressions: [_.cloneDeep(this.state.expression)]
+      expressions: _.cloneDeep(this.state.expressions)
     }
 
     this.props.addNewNodeCallback(data)
@@ -98,7 +126,7 @@ class ExpressionModal extends React.Component {
     const data = {
       id: this.props.node.id,
       parents: _.clone(this.state.currentlySelectedParents),
-      expressions: [_.cloneDeep(this.state.expression)]
+      expressions: _.cloneDeep(this.state.expressions)
     }
 
     this.props.updateNodeCallback(data, this.props.closeCallback)
@@ -125,9 +153,37 @@ class ExpressionModal extends React.Component {
 
         <Modal.Body>
           <Row>
-            <h3>Espressione:</h3>
             <Col xs={12}>
-              <Form.Control onChange={this.updateExpression} value={this.state.expression} />
+              <h3>Espressioni:</h3>
+              {this.state.expressions.map((exp, idx) => {
+                return (
+                  <Row key={idx}>
+                    <Col xs={4}>
+                      <Button variant='danger' size='sm' onClick={() => {this.removeExpression(idx)}} style={{ width: '100%' }}>
+                        <Trash />
+                      </Button>
+                    </Col>
+                    <Col xs={8}>
+                      {exp}
+                    </Col>
+                  </Row>
+                )
+              })}
+            </Col>
+          </Row>
+
+          <Row>
+            <h3>Nuova espressione:</h3>
+            <Col xs={12}>
+              <Form.Control onChange={this.updateExpression} value={this.state.currentExpression} />
+            </Col>
+          </Row>
+
+          <Row>
+            <Col>
+              <Button style={{ marginTop: '20px' }} variant='primary' disabled={this.currentExpression === ''} onClick={this.addExpression}>
+                + Aggiungi espressione al nodo
+              </Button>
             </Col>
           </Row>
 
