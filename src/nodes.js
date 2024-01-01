@@ -32,6 +32,19 @@ const NODES = {
   }
 }
 
+const replaceSymbols = {
+  '>=': '≥',
+  '<=': '≤'
+}
+
+function cleanupExpression (expression) {
+  let cleanExpression = expression
+  for (const sym in replaceSymbols) {
+    cleanExpression = cleanExpression.replaceAll(sym, replaceSymbols[sym])
+  }
+  return cleanExpression
+}
+
 function getNodeText (type, data) {
   let newNodeText = '\n'
   if (type === 'variable') {
@@ -42,10 +55,10 @@ function getNodeText (type, data) {
     }
   } else if (type === 'expression') {
     for (const expression of data.expressions) {
-      newNodeText += expression + '\n'
+      newNodeText += cleanupExpression(expression) + '\n'
     }
   } else if (type === 'condition') {
-    newNodeText += data.condition
+    newNodeText += cleanupExpression(data.condition)
   } else if (type === 'output') {
     newNodeText += 'output "' + data.output + '"'
   }
