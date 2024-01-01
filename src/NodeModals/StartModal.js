@@ -11,7 +11,7 @@ class StartModal extends React.Component {
 
   render () {
     return (
-      <Modal show={this.props.show} onHide={this.props.closeCallback}>
+      <Modal show={this.props.show} onHide={this.props.closeCallback} size='lg'>
         <Modal.Header closeButton>
           <Modal.Title>
             Nodo {this.props.node.id} ({this.props.node.type})

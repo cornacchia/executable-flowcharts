@@ -107,7 +107,7 @@ class OutputModal extends React.Component {
 
   render () {
     return (
-      <Modal show={this.props.show} onHide={this.props.closeCallback}>
+      <Modal show={this.props.show} onHide={this.props.closeCallback} size='lg'>
         <Modal.Header closeButton>
           <Modal.Title>
             {!_.isNil(this.props.node) &&
