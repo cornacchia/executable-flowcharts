@@ -71,7 +71,6 @@ function getNodeText (type, data) {
 function getNodeHtml (type, data) {
   const nodeText = getNodeText(type, data)
   const nodeHtml = nodeText.replaceAll('\n', '<br/>')
-  console.log(nodeHtml)
   return nodeHtml
 }
 

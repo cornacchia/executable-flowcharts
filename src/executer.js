@@ -16,7 +16,7 @@ function isNumeric (str) {
 }
 
 function cleanupUserInput (token) {
-  if (['<', '>', '==', '(', ')', '+', '-', '/', '*', '='].indexOf(token) >= 0) return token
+  if (['<', '>', '==', '(', ')', '+', '-', '/', '*', '=', '+=', '-='].indexOf(token) >= 0) return token
   else if (isNumeric(token)) return token
   else if (accessArrayRegex.test(token)) {
     const match = accessArrayRegex.exec(token)
@@ -30,12 +30,12 @@ function cleanupUserInput (token) {
   return 'this[' + JSON.stringify(token) + ']'
 }
 
-function executeFromNode (node, nodes, calcData) {
+function executeFromNode (node, nodes, func, calcData) {
   if (node.type === 'end') {
     return calcData
   }
 
-  let nextNode = _.find(nodes, { id: node.children.main })
+  let nextNode = _.find(nodes[func], { id: node.children.main })
 
   if (node.type === 'variable') {
     for (const variable of node.variables) {
@@ -67,8 +67,8 @@ function executeFromNode (node, nodes, calcData) {
       return eval(str)
     }.call(calcData.scope, parsedCondition)
 
-    if (result) nextNode = _.find(nodes, { id: node.children.yes })
-    else nextNode = _.find(nodes, { id: node.children.no })
+    if (result) nextNode = _.find(nodes[func], { id: node.children.yes })
+    else nextNode = _.find(nodes[func], { id: node.children.no })
   } else if (node.type === 'output') {
     const matchedVariables = {}
     let match
@@ -95,7 +95,7 @@ function executeFromNode (node, nodes, calcData) {
 
   calcData.memoryStates.push(memoryStateSnapshot)
 
-  return executeFromNode(nextNode, nodes, calcData)
+  return executeFromNode(nextNode, nodes, func, calcData)
 }
 
 module.exports = {

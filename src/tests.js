@@ -40,13 +40,13 @@ function testUpdateNode (startNodes, updates, expectedNodes) {
 }
 
 function testExecuteNodes (nodes, expectedResult) {
-  const startNode = _.find(nodes, { nodeType: 'start' })
+  const startNode = _.find(nodes.main, { nodeType: 'start' })
   let error = false
   let errorObj = null
   let res = {}
 
   try {
-    res = executer.executeFromNode(startNode, nodes, executer.getNewCalcData())
+    res = executer.executeFromNode(startNode, nodes, 'main', executer.getNewCalcData())
   } catch (err) {
     error = true
     errorObj = err
@@ -208,11 +208,12 @@ const TESTS_EXEC = {
   exec1: {
     log: 'Simple variable definition',
     f: testExecuteNodes,
-    s: [
-      { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
-      { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  1 }, { name: 'b', value: true }, { name: 'c', value: [1, 2, 3] }] },
-      { id: 3, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 2, branch: 'main' }] }
-    ],
+    s: { main: [
+        { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
+        { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  1 }, { name: 'b', value: true }, { name: 'c', value: [1, 2, 3] }] },
+        { id: 3, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 2, branch: 'main' }] }
+      ]
+    },
     r: {
       error: false,
       scope: {
@@ -225,12 +226,13 @@ const TESTS_EXEC = {
   exec2: {
     log: 'Basic expression',
     f: testExecuteNodes,
-    s: [
-      { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
-      { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  1 } ] },
-      { id: 3, nodeType: 'operation', type: 'expression', children: { main: 4 }, parents: [{ id: 2, branch: 'main' }], expressions: ['a = a + 3'] },
-      { id: 4, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 2, branch: 'main' }] }
-    ],
+    s: { main: [
+        { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
+        { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  1 } ] },
+        { id: 3, nodeType: 'operation', type: 'expression', children: { main: 4 }, parents: [{ id: 2, branch: 'main' }], expressions: ['a = a + 3'] },
+        { id: 4, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 2, branch: 'main' }] }
+      ]
+    },
     r: {
       error: false,
       scope: {
@@ -241,12 +243,13 @@ const TESTS_EXEC = {
   exec3: {
     log: 'Expression with parentheses',
     f: testExecuteNodes,
-    s: [
-      { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
-      { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  1 } ] },
-      { id: 3, nodeType: 'operation', type: 'expression', children: { main: 4 }, parents: [{ id: 2, branch: 'main' }], expressions: ['a = (a + 3) * 2'] },
-      { id: 4, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 2, branch: 'main' }] }
-    ],
+    s: { main: [
+        { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
+        { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  1 } ] },
+        { id: 3, nodeType: 'operation', type: 'expression', children: { main: 4 }, parents: [{ id: 2, branch: 'main' }], expressions: ['a = (a + 3) * 2'] },
+        { id: 4, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 2, branch: 'main' }] }
+      ]
+    },
     r: {
       error: false,
       scope: {
@@ -257,12 +260,13 @@ const TESTS_EXEC = {
   exec4: {
     log: 'Collection access',
     f: testExecuteNodes,
-    s: [
-      { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
-      { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  [1, 2, 3] } ] },
-      { id: 3, nodeType: 'operation', type: 'expression', children: { main: 4 }, parents: [{ id: 2, branch: 'main' }], expressions: ['a[0] = a[1] + a[2]'] },
-      { id: 4, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 2, branch: 'main' }] }
-    ],
+    s: { main: [
+        { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
+        { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  [1, 2, 3] } ] },
+        { id: 3, nodeType: 'operation', type: 'expression', children: { main: 4 }, parents: [{ id: 2, branch: 'main' }], expressions: ['a[0] = a[1] + a[2]'] },
+        { id: 4, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 2, branch: 'main' }] }
+      ]
+    },
     r: {
       error: false,
       scope: {
@@ -273,15 +277,16 @@ const TESTS_EXEC = {
   exec5: {
     log: 'Find max in collection',
     f: testExecuteNodes,
-    s: [
-      { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
-      { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  [1, 1, 2, 9, 3] }, { name: 'max', value: -1 }, { name: 'i', value: 0 }, { name: 'len', value: 5 } ] },
-      { id: 3, nodeType: 'condition', type: 'condition', children: { main: -1, yes: 4, no: 10 }, parents: [{ id: 2, branch: 'main' }, { id: 6, branch: 'main' }], condition: 'i < len' },
-      { id: 4, nodeType: 'condition', type: 'condition', children: { main: -1, yes: 5, no: 6 }, parents: [{ id: 3, branch: 'yes' }], condition: 'max < a[i]' },
-      { id: 5, nodeType: 'operation', type: 'expression', children: { main: 6 }, parents: [{ id: 4, branch: 'yes' }], expressions: ['max = a[i]'] },
-      { id: 6, nodeType: 'operation', type: 'expression', children: { main: 3 }, parents: [{ id: 4, branch: 'no' }, { id: 5, branch: 'main' }], expressions: ['i = i + 1'] },
-      { id: 10, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 3, branch: 'no' }] }
-    ],
+    s: { main: [
+        { id: 1, nodeType: 'start', type: 'start', children: { main: 2 }, parents: [] },
+        { id: 2, nodeType: 'variable', type: 'variable', children: { main: 3 }, parents: [{ id: 1, branch: 'main' }], variables: [ { name: 'a', value:  [1, 1, 2, 9, 3] }, { name: 'max', value: -1 }, { name: 'i', value: 0 }, { name: 'len', value: 5 } ] },
+        { id: 3, nodeType: 'condition', type: 'condition', children: { main: -1, yes: 4, no: 10 }, parents: [{ id: 2, branch: 'main' }, { id: 6, branch: 'main' }], condition: 'i < len' },
+        { id: 4, nodeType: 'condition', type: 'condition', children: { main: -1, yes: 5, no: 6 }, parents: [{ id: 3, branch: 'yes' }], condition: 'max < a[i]' },
+        { id: 5, nodeType: 'operation', type: 'expression', children: { main: 6 }, parents: [{ id: 4, branch: 'yes' }], expressions: ['max = a[i]'] },
+        { id: 6, nodeType: 'operation', type: 'expression', children: { main: 3 }, parents: [{ id: 4, branch: 'no' }, { id: 5, branch: 'main' }], expressions: ['i = i + 1'] },
+        { id: 10, nodeType: 'end', type: 'end', children: { main: -1 }, parents: [{ id: 3, branch: 'no' }] }
+      ]
+    },
     r: {
       error: false,
       scope: {
