@@ -12,6 +12,7 @@ import VariableModal from './NodeModals/VariableModal'
 import ExpressionModal from './NodeModals/ExpressionModal'
 import ConditionModal from './NodeModals/ConditionModal'
 import OutputModal from './NodeModals/OutputModal'
+import FunctionCallModal from './NodeModals/FunctionCallModal'
 import AddChildButtons from './NodeModals/AddChildButtons'
 
 const _ = require('lodash')
@@ -48,24 +49,39 @@ class Flow extends React.Component {
     this.addExpressionNode = this.addExpressionNode.bind(this)
     this.addConditionNode = this.addConditionNode.bind(this)
     this.addOutputNode = this.addOutputNode.bind(this)
+    this.addFunctionCallNode = this.addFunctionCallNode.bind(this)
     this.shouldShowStartModal = this.shouldShowStartModal.bind(this)
     this.shouldShowVariableModal = this.shouldShowVariableModal.bind(this)
     this.shouldShowExpressionModal = this.shouldShowExpressionModal.bind(this)
     this.shouldShowOutputModal = this.shouldShowOutputModal.bind(this)
+    this.shouldShowFunctionCallModal = this.shouldShowFunctionCallModal.bind(this)
     this.showExecutionFeedback = this.showExecutionFeedback.bind(this)
+    this.setupFunctionBaseNodes = this.setupFunctionBaseNodes.bind(this)
+    this.selectFunctionTab = this.selectFunctionTab.bind(this)
   }
 
-  componentDidMount () {
+  setupFunctionBaseNodes (func) {
     const startNode = nodesUtils.getNewNode('start')
     const endNode = nodesUtils.getNewNode('end')
 
     const stateNodes = this.state.nodes
-    stateNodes.main.push(startNode)
-    stateNodes.main.push(endNode)
+    stateNodes[func].push(startNode)
+    stateNodes[func].push(endNode)
 
-    nodesUtils.connectNodes(startNode, 'main', endNode, this.state.nodes.main)
+    nodesUtils.connectNodes(startNode, func, endNode, this.state.nodes.main)
+  }
+
+  componentDidMount () {
+    this.setupFunctionBaseNodes('main')
 
     this.renderDiagram()
+  }
+
+  selectFunctionTab (tabKey) {
+    // TODO render diagram here
+    this.setState({
+      selectedFunc: tabKey
+    })
   }
 
   executeFlowchart () {
@@ -245,6 +261,32 @@ class Flow extends React.Component {
     this.renderDiagram()
   }
 
+  addFunctionCallNode (data) {
+    const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
+    const newOutputNode = nodesUtils.getNewNode('functionCall', data)
+
+    for (const parentInfo of data.parents) {
+      const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
+      nodesUtils.connectNodes(newNodeParent, parentInfo.branch, newOutputNode, selectedFuncNodes)
+    }
+
+    selectedFuncNodes.push(newOutputNode)
+
+    const functionName = data.functionName
+    if (_.isNil(this.state.nodes[functionName])) {
+      const nodes = this.state.nodes
+      nodes[functionName] = []
+      this.setState({
+        nodes
+      }, () => {
+        this.setupFunctionBaseNodes(functionName)
+        this.renderDiagram()
+      })
+    } else {
+      this.renderDiagram()
+    }
+  }
+
   shouldShowStartModal () {
     return !_.isNil(this.state.selectedNodeObj) &&
       this.state.selectedNodeObj.type === 'start'
@@ -274,6 +316,12 @@ class Flow extends React.Component {
     (this.state.newNodeType === 'output')
   }
 
+  shouldShowFunctionCallModal () {
+    return (!_.isNil(this.state.selectedNodeObj) &&
+    this.state.selectedNodeObj.type === 'functionCall') ||
+    (this.state.newNodeType === 'functionCall')
+  }
+
   render () {
     return (
       <div>
@@ -282,14 +330,14 @@ class Flow extends React.Component {
           <AddChildButtons addChildCallback={this.addNode} node={null} branch='main' />
         </Row>
         <hr />
-        <Tabs activeKey={this.state.selectedFunc}>
+        <Tabs activeKey={this.state.selectedFunc} onSelect={this.selectFunctionTab}>
         {_.keys(this.state.nodes).map((func, idx) => {
           return (
             <Tab eventKey={func} title={func} key={idx}>
               <Row>
                 <Col xs={5}>
                   <h3>Diagramma di flusso</h3>
-                  <div id={'flowchartDiv' + func} style={{ height: '100%', overflow: 'scroll' }}></div>
+                  <div className='flowChartDiv' id={'flowchartDiv' + func} />
                 </Col>
 
                 <Col xs={2}>
@@ -402,6 +450,19 @@ class Flow extends React.Component {
             closeCallback={this.unselectNode}
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addOutputNode}
+            updateNodeCallback={this.updateNode}
+          />
+        }
+
+        {this.shouldShowFunctionCallModal() &&
+          <FunctionCallModal
+            node={this.state.selectedNodeObj}
+            nodes={this.state.nodes[this.state.selectedFunc]}
+            parents={this.state.selectedNodeParents}
+            show={this.shouldShowFunctionCallModal()}
+            closeCallback={this.unselectNode}
+            addChildCallback={this.addNode}
+            addNewNodeCallback={this.addFunctionCallNode}
             updateNodeCallback={this.updateNode}
           />
         }

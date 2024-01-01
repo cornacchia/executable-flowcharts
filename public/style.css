@@ -3,3 +3,8 @@
   margin-left: 5px;
   margin-right: 5px;
 }
+
+.flowChartDiv {
+  overflow: scroll;
+  height: 700px;
+}

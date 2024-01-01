@@ -27,6 +27,10 @@ const NODES = {
   output: {
     type: 'output',
     nodeType: 'inputoutput'
+  },
+  functionCall: {
+    type: 'functionCall',
+    nodeType: 'subroutine'
   }
 }
 
@@ -63,6 +67,17 @@ function getNodeText (type, data) {
     newNodeText += cleanupExpression(data.condition)
   } else if (type === 'output') {
     newNodeText += 'output "' + data.output + '"'
+  } else if (type === 'functionCall') {
+    if (data.assignReturnValTo) {
+      newNodeText += data.assignReturnValTo + ' = '
+    }
+    newNodeText += data.functionName
+    newNodeText += '('
+    for (let i = 0; i < data.functionParameters.length; i++) {
+      newNodeText += data.functionParameters[i].value
+      if (i < data.functionParameters.length - 1) newNodeText += ', '
+    }
+    newNodeText += ')'
   }
 
   return newNodeText
@@ -84,7 +99,7 @@ function getNewNode (type, data) {
   newNode.selected = false
 
   if (type === 'variable') {
-    newNode.variables = data.variables
+    newNode.variables = _.cloneDeep(data.variables)
   } else if (type === 'expression') {
     newNode.expressions = data.expressions
   } else if (type === 'condition') {
@@ -92,6 +107,10 @@ function getNewNode (type, data) {
     newNode.children = { yes: -1, no: -1, main: -1 }
   } else if (type === 'output') {
     newNode.output = data.output
+  } else if (type === 'functionCall') {
+    newNode.functionName = data.functionName
+    newNode.assignReturnValTo = data.assignReturnValTo
+    newNode.functionParameters = _.cloneDeep(data.functionParameters)
   }
 
   return newNode
@@ -99,13 +118,17 @@ function getNewNode (type, data) {
 
 function updateNodeContents (nodeObj, data) {
   if (nodeObj.type === 'variable') {
-    nodeObj.variables = data.variables
+    nodeObj.variables = _.cloneDeep(data.variables)
   } else if (nodeObj.type === 'expression') {
     nodeObj.expressions = data.expressions
   } else if (nodeObj.type === 'condition') {
     nodeObj.condition = data.condition
   } else if (nodeObj.type === 'output') {
     nodeObj.output = data.output
+  } else if (nodeObj.type === 'functionCall') {
+    nodeObj.functionName = data.functionName
+    nodeObj.assignReturnValTo = data.assignReturnValTo
+    nodeObj.functionParameters = _.cloneDeep(data.functionParameters)
   }
 
   return nodeObj

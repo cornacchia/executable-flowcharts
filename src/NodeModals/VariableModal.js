@@ -12,9 +12,6 @@ import AddChildButtons from './AddChildButtons'
 const _ = require('lodash')
 const utils = require('../utils')
 
-const varNameValidateRegex = /^[a-zA-Z][a-zA-Z\d]*$/
-const forbiddenNames = ['new', 'var', 'const', 'let', 'function', 'window', 'document', 'cookie']
-
 const defaultValues = {
   int: 0,
   bool: 'true',
@@ -34,7 +31,7 @@ const baseState = {
     definedVariables: [],
     selectedVariableType: defaultVariableType,
     currentVariableName: '',
-    currentVariableValue: defaultValues[defaultVariableType],
+    currentVariableValue: _.cloneDeep(defaultValues[defaultVariableType]),
     okToAddNode: false
 }
 
@@ -97,7 +94,7 @@ class VariableModal extends React.Component {
   updateCurrentVariableName (ev) {
     const newVarName = ev.target.value.trim()
 
-    if (varNameValidateRegex.test(newVarName) && forbiddenNames.indexOf(newVarName) < 0) {
+    if (utils.validateVariableOrFunctionName(newVarName)) {
       this.setState({
         currentVariableName: ev.target.value
       })
@@ -150,7 +147,7 @@ class VariableModal extends React.Component {
 
   changeVariableType (evt) {
     const newVariableType = evt.target.value
-    const newVariableValue = _.clone(defaultValues[newVariableType])
+    const newVariableValue = _.cloneDeep(defaultValues[newVariableType])
 
     this.setState({
       selectedVariableType: newVariableType,
@@ -175,7 +172,7 @@ class VariableModal extends React.Component {
       definedVariables: stateVariables,
       selectedVariableType: defaultVariableType,
       currentVariableName: '',
-      currentVariableValue: defaultValues[defaultVariableType]
+      currentVariableValue: _.cloneDeep(defaultValues[defaultVariableType])
     }, this.validate)
   }
 

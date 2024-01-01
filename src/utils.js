@@ -195,6 +195,19 @@ function getVariableStringRepresentation (type, value) {
   else return value
 }
 
+const varNameValidateRegex = /^[a-zA-Z][a-zA-Z\d]*$/
+const forbiddenNames = ['new', 'var', 'const', 'let', 'function', 'window', 'document', 'cookie']
+
+function validateVariableOrFunctionName (name) {
+  if (name === '') return true
+
+  if (
+      varNameValidateRegex.test(name) &&
+      forbiddenNames.indexOf(name) < 0
+    ) return true
+  return false
+}
+
 module.exports = {
   getNodeConnections,
   getParentNodeData,
@@ -205,5 +218,6 @@ module.exports = {
   checkIfSameParents,
   checkIfOnlyAddingParents,
   translateMemoryStateToHtml,
-  getVariableStringRepresentation
+  getVariableStringRepresentation,
+  validateVariableOrFunctionName
 }
