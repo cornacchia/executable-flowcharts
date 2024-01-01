@@ -68,7 +68,7 @@ class Flow extends React.Component {
     stateNodes[func].push(startNode)
     stateNodes[func].push(endNode)
 
-    nodesUtils.connectNodes(startNode, func, endNode, this.state.nodes.main)
+    nodesUtils.connectNodes(startNode, 'main', endNode, this.state.nodes[func])
   }
 
   componentDidMount () {
@@ -78,10 +78,9 @@ class Flow extends React.Component {
   }
 
   selectFunctionTab (tabKey) {
-    // TODO render diagram here
     this.setState({
       selectedFunc: tabKey
-    })
+    }, this.renderDiagram)
   }
 
   executeFlowchart () {
