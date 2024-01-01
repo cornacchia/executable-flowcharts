@@ -155,7 +155,6 @@ function severChildConnection (nodeObj, branch, nodes) {
 }
 
 function convertToNodeLine (node) {
-  console.log(node)
   let nodeStr = node.id + '=>'
   nodeStr += node.nodeType
   nodeStr += ': ' + node.id + ') \n' + getNodeText(node.type, node)
