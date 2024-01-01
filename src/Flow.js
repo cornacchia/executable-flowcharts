@@ -294,11 +294,10 @@ class Flow extends React.Component {
                 return (
                   <ListGroup.Item key={idx} onClick={() => { this.selectNode({ key: node.id }) }} active={!_.isNil(this.state.selectedNodeObj) && this.state.selectedNodeObj.id === node.id}>
                     {node.nodeType !== 'start' && node.parents.length === 0 && <ExclamationTriangle />}
-                    &nbsp;
                     <strong>{node.id})</strong>
-                    <br/>
-                    {node.text}
-                    <br/>
+                    <p
+                      dangerouslySetInnerHTML={{__html: nodes.getNodeHtml(node.type, node)}}
+                    />
                   </ListGroup.Item>
                 )
               })}

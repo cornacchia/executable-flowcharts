@@ -6,13 +6,11 @@ let ID = 0
 const NODES = {
   start: {
     type: 'start',
-    nodeType: 'start',
-    text: 'Start'
+    nodeType: 'start'
   },
   end: {
     type: 'end',
-    nodeType: 'end',
-    text: 'End'
+    nodeType: 'end'
   },
   variable: {
     type: 'variable',
@@ -46,8 +44,12 @@ function cleanupExpression (expression) {
 }
 
 function getNodeText (type, data) {
-  let newNodeText = '\n'
-  if (type === 'variable') {
+  let newNodeText = ''
+  if (type === 'start') {
+    newNodeText = 'Start'
+  } else if (type === 'end') {
+    newNodeText = 'End'
+  } else if (type === 'variable') {
     for (let i = 0; i < data.variables.length; i++) {
       const variable = data.variables[i]
       newNodeText += variable.type + ' ' + variable.name + ' = ' + utils.getVariableStringRepresentation(variable.type, variable.value)
@@ -66,6 +68,13 @@ function getNodeText (type, data) {
   return newNodeText
 }
 
+function getNodeHtml (type, data) {
+  const nodeText = getNodeText(type, data)
+  const nodeHtml = nodeText.replaceAll('\n', '<br/>')
+  console.log(nodeHtml)
+  return nodeHtml
+}
+
 function getNewNode (type, data) {
   if (!NODES[type]) console.error('Not implemented!')
 
@@ -77,17 +86,13 @@ function getNewNode (type, data) {
 
   if (type === 'variable') {
     newNode.variables = data.variables
-    newNode.text = getNodeText(type, data)
   } else if (type === 'expression') {
     newNode.expressions = data.expressions
-    newNode.text = getNodeText(type, data)
   } else if (type === 'condition') {
     newNode.condition = data.condition
     newNode.children = { yes: -1, no: -1, main: -1 }
-    newNode.text = getNodeText(type, data)
   } else if (type === 'output') {
     newNode.output = data.output
-    newNode.text = getNodeText(type, data)
   }
 
   return newNode
@@ -96,16 +101,12 @@ function getNewNode (type, data) {
 function updateNodeContents (nodeObj, data) {
   if (nodeObj.type === 'variable') {
     nodeObj.variables = data.variables
-    nodeObj.text = getNodeText(nodeObj.type, data)
   } else if (nodeObj.type === 'expression') {
     nodeObj.expressions = data.expressions
-    nodeObj.text = getNodeText(nodeObj.type, data)
   } else if (nodeObj.type === 'condition') {
     nodeObj.condition = data.condition
-    nodeObj.text = getNodeText(nodeObj.type, data)
   } else if (nodeObj.type === 'output') {
     nodeObj.output = data.output
-    nodeObj.text = getNodeText(nodeObj.type, data)
   }
 
   return nodeObj
@@ -154,9 +155,10 @@ function severChildConnection (nodeObj, branch, nodes) {
 }
 
 function convertToNodeLine (node) {
+  console.log(node)
   let nodeStr = node.id + '=>'
   nodeStr += node.nodeType
-  nodeStr += ': ' + node.id + ') ' + node.text
+  nodeStr += ': ' + node.id + ') \n' + getNodeText(node.type, node)
   if (node.selected) nodeStr += '|selected'
   nodeStr += ':$nodeClickCallback'
 
@@ -293,5 +295,6 @@ module.exports = {
   convertToDiagramStr,
   updateNodeContents,
   severChildConnection,
-  updateNode
+  updateNode,
+  getNodeHtml
 }
