@@ -1,5 +1,4 @@
 const _ = require('lodash')
-const mathjs = require('mathjs')
 const booleanExpression = require('boolean-expression')
 
 const accessArrayRegex = /^([a-zA-Z][a-zA-Z\d]*)\[([a-zA-Z\d]{0,})\]$/

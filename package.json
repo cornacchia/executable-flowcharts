@@ -6,7 +6,6 @@
     "boolean-expression": "^2.0.0",
     "flowchart.js": "^1.17.1",
     "lodash": "^4.17.21",
-    "mathjs": "^12.1.0",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-bootstrap": "^2.8.0",
