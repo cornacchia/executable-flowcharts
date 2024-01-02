@@ -93,13 +93,16 @@ function executeFromNode (node, nodes, func, calcData) {
     // TODO pass parameters
     executeFromNode(funcStartNode, nodes, functionName, calcData)
 
-    if (assignReturnValTo !== '' && !_.isNil(calcData.returnVal[functionName])) {
+    if (assignReturnValTo !== '') {
       // TODO handle missing variable
       calcData.scope[func][assignReturnValTo] = calcData.returnVal[functionName]
+
+    }
+
+    if (!_.isNil(calcData.returnVal[functionName])) {
       // "Consume" the return value
       calcData.returnVal[functionName] = null
     }
-    // TODO assign return val
   } else if (node.type === 'returnValue') {
     const returnType = node.returnType
     let returnValue = node.returnValue
