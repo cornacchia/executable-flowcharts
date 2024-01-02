@@ -86,13 +86,28 @@ function executeFromNode (node, nodes, func, calcData) {
     calcData.outputs.push({ func, str: outputStr })
   } else if (node.type === 'functionCall') {
     const functionName = node.functionName
-    const assignReturnTo = node.assignReturnTo
+    const assignReturnValTo = node.assignReturnValTo
     const parameters = node.functionParameters
 
     const funcStartNode = _.find(nodes[functionName], n => { return n.type === 'start' })
     // TODO pass parameters
     executeFromNode(funcStartNode, nodes, functionName, calcData)
+
+    if (assignReturnValTo !== '' && !_.isNil(calcData.returnVal[functionName])) {
+      // TODO handle missing variable
+      calcData.scope[func][assignReturnValTo] = calcData.returnVal[functionName]
+      // "Consume" the return value
+      calcData.returnVal[functionName] = null
+    }
     // TODO assign return val
+  } else if (node.type === 'returnValue') {
+    const returnType = node.returnType
+    let returnValue = node.returnValue
+    if (returnType === 'variableName') {
+      // TODO handle missing variable
+      returnValue = _.cloneDeep(calcData.scope[func][returnValue])
+    }
+    calcData.returnVal[func] = returnValue
   }
 
   const memoryStateSnapshot = {

@@ -31,6 +31,10 @@ const NODES = {
   functionCall: {
     type: 'functionCall',
     nodeType: 'subroutine'
+  },
+  returnValue: {
+    type: 'returnValue',
+    nodeType: 'operation'
   }
 }
 
@@ -78,6 +82,8 @@ function getNodeText (type, data) {
       if (i < data.functionParameters.length - 1) newNodeText += ', '
     }
     newNodeText += ')'
+  } else if (type === 'returnValue') {
+    newNodeText += 'return ' + JSON.stringify(data.returnValue)
   }
 
   return newNodeText
@@ -111,6 +117,9 @@ function getNewNode (type, data) {
     newNode.functionName = data.functionName
     newNode.assignReturnValTo = data.assignReturnValTo
     newNode.functionParameters = _.cloneDeep(data.functionParameters)
+  } else if (type === 'returnValue') {
+    newNode.returnType = data.returnType
+    newNode.returnValue = data.returnValue
   }
 
   return newNode
@@ -129,6 +138,9 @@ function updateNodeContents (nodeObj, data) {
     nodeObj.functionName = data.functionName
     nodeObj.assignReturnValTo = data.assignReturnValTo
     nodeObj.functionParameters = _.cloneDeep(data.functionParameters)
+  } else if (nodeObj.type === 'returnValue') {
+    nodeObj.returnType = data.returnType
+    nodeObj.returnValue = data.returnValue
   }
 
   return nodeObj

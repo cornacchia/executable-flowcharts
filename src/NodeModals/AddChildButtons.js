@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import ButtonGroup from 'react-bootstrap/ButtonGroup'
 import Button from 'react-bootstrap/Button'
-import { Clipboard, Calculator, SignpostSplit, Printer, CaretRightSquare } from 'react-bootstrap-icons'
+import { Clipboard, Calculator, SignpostSplit, Printer, CaretRightSquare, BoxArrowDown, BoxArrowUp } from 'react-bootstrap-icons'
 
 class AddChildButtons extends React.Component {
   constructor (props) {
@@ -28,6 +28,12 @@ class AddChildButtons extends React.Component {
         </Button>
         <Button variant='dark' onClick={() => {this.props.addChildCallback('functionCall', this.props.node, this.props.branch)}}>
           + Funzione <CaretRightSquare />
+        </Button>
+        <Button variant='secondary' onClick={() => {this.props.addChildCallback('readParameters', this.props.node, this.props.branch)}}>
+          + Leggi parametri <BoxArrowDown />
+        </Button>
+        <Button variant='dark' onClick={() => {this.props.addChildCallback('returnValue', this.props.node, this.props.branch)}}>
+          + Ritorna valore <BoxArrowUp />
         </Button>
       </ButtonGroup>
     )
