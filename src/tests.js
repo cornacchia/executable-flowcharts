@@ -46,7 +46,7 @@ function testExecuteNodes (nodes, expectedResult) {
   let res = {}
 
   try {
-    res = executer.executeFromNode(startNode, nodes, 'main', executer.getNewCalcData())
+    res = executer.executeFromNode(startNode, nodes, 'main', executer.getNewCalcData(nodes))
   } catch (err) {
     error = true
     errorObj = err
@@ -63,19 +63,21 @@ function testExecuteNodes (nodes, expectedResult) {
     return false
   }
 
-  if (_.keys(res.scope).length !== _.keys(expectedResult.scope).length) {
-    console.log('!!! Different scope variables, expected: ', JSON.stringify(_.keys(expectedResult.scope)), 'found:', _.keys(res.scope))
-    return false
-  }
-
-  for (const key in res.scope) {
-    if (_.isNil(expectedResult.scope[key])) {
-      console.log('!!! Different scope variables, expected: ', JSON.stringify(expectedResult.scope), 'found:', JSON.stringify(res.scope))
+  for (const func in res.scope) {
+    if (_.keys(res.scope[func]).length !== _.keys(expectedResult.scope[func]).length) {
+      console.log('!!! Different scope variables(' + func + '), expected: ', JSON.stringify(_.keys(expectedResult.scope[func])), 'found:', _.keys(res.scope[func]))
       return false
     }
-    if (!_.isEqual(res.scope[key], expectedResult.scope[key])) {
-      console.log('!!! Different scope variable values, expected: ', JSON.stringify(expectedResult.scope), 'found:', JSON.stringify(res.scope))
-      return false
+  
+    for (const key in res.scope[func]) {
+      if (_.isNil(expectedResult.scope[func][key])) {
+        console.log('!!! Different scope variables(' + func + '), expected: ', JSON.stringify(expectedResult.scope[func]), 'found:', JSON.stringify(res.scope[func]))
+        return false
+      }
+      if (!_.isEqual(res.scope[func][key], expectedResult.scope[func][key])) {
+        console.log('!!! Different scope variable values(' + func + '), expected: ', JSON.stringify(expectedResult.scope[func]), 'found:', JSON.stringify(res.scope[func]))
+        return false
+      }
     }
   }
 
@@ -217,9 +219,11 @@ const TESTS_EXEC = {
     r: {
       error: false,
       scope: {
-        a: 1,
-        b: true,
-        c: [1, 2, 3]
+        main: {
+          a: 1,
+          b: true,
+          c: [1, 2, 3]
+        }
       }
     }
   },
@@ -236,7 +240,9 @@ const TESTS_EXEC = {
     r: {
       error: false,
       scope: {
-        a: 4
+        main: {
+          a: 4
+        }
       }
     }
   },
@@ -253,7 +259,9 @@ const TESTS_EXEC = {
     r: {
       error: false,
       scope: {
-        a: 8
+        main: {
+          a: 8
+        }
       }
     }
   },
@@ -270,7 +278,9 @@ const TESTS_EXEC = {
     r: {
       error: false,
       scope: {
-        a: [5, 2, 3]
+        main: {
+          a: [5, 2, 3]
+        }
       }
     }
   },
@@ -290,10 +300,12 @@ const TESTS_EXEC = {
     r: {
       error: false,
       scope: {
-        a: [1, 1, 2, 9, 3],
-        max: 9,
-        i: 5,
-        len: 5
+        main: {
+          a: [1, 1, 2, 9, 3],
+          max: 9,
+          i: 5,
+          len: 5
+        }
       }
     }
   }
