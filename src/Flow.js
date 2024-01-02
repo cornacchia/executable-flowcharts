@@ -85,7 +85,7 @@ class Flow extends React.Component {
 
   executeFlowchart () {
     const startNode = _.find(this.state.nodes.main, { nodeType: 'start' })
-    const res = executer.executeFromNode(startNode, this.state.nodes, 'main', executer.getNewCalcData())
+    const res = executer.executeFromNode(startNode, this.state.nodes, 'main', executer.getNewCalcData(this.state.nodes))
 
     console.log(res.scope, res.outputs)
 
@@ -98,7 +98,7 @@ class Flow extends React.Component {
     let outputCounter = 0
     for (const output of data.outputs) {
       outputCounter += 1
-      fullOutput += '<strong>' + outputCounter + ']</strong> ' + output + '<br />'
+      fullOutput += '<strong>' + outputCounter + ', ' + output.func + ']</strong> ' + output.str + '<br />'
     }
 
     this.setState({ outputToShow: fullOutput, memoryStates: data.memoryStates })
@@ -385,7 +385,7 @@ class Flow extends React.Component {
           {this.state.memoryStates.map((state, idx) => {
             return (
               <Col className='memoryStateElement' xs={2} key={idx}>
-                <strong>Ultimo nodo eseguito:&nbsp;{state.id}</strong>
+                <strong>Nodo eseguito:&nbsp;{state.id} ({state.func})</strong>
                 <div dangerouslySetInnerHTML={{ __html: utils.translateMemoryStateToHtml(state) }}></div>
               </Col>
             )

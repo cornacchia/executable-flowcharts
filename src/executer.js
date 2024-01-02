@@ -4,8 +4,14 @@ const booleanExpression = require('boolean-expression')
 const accessArrayRegex = /^([a-zA-Z][a-zA-Z\d]*)\[([a-zA-Z\d]{0,})\]$/
 const outputVariableRegex = /\$([a-zA-Z]+[a-zA-Z\d]*)/
 
-function getNewCalcData () {
-  const calcData = { scope: {}, outputs: [], memoryStates: [] }
+function getNewCalcData (nodes) {
+  const calcData = { scope: {}, outputs: [], memoryStates: [], parameters: {}, returnVal: {} }
+  for (const func in nodes) {
+    calcData.scope[func] = {}
+    calcData.parameters[func] = {}
+    calcData.returnVal[func] = null
+  }
+
   return calcData
 }
 
@@ -39,24 +45,16 @@ function executeFromNode (node, nodes, func, calcData) {
 
   if (node.type === 'variable') {
     for (const variable of node.variables) {
-      calcData.scope[variable.name] = variable.value
+      calcData.scope[func][variable.name] = variable.value
     }
   } else if (node.type === 'expression') {
-    /*
-    try {
-      mathjs.evaluate(node.expression, calcData.scope)
-    } catch (err) {
-      // TODO give feedback to user
-      console.error(err)
-    }
-    */
     for (const expr of node.expressions) {
       const expression = booleanExpression(expr)
       const parsedExpr = expression.toString(cleanupUserInput)
 
       const result = function (str) {
         return eval(str)
-      }.call(calcData.scope, parsedExpr)
+      }.call(calcData.scope[func], parsedExpr)
     }
 
   } else if (node.type === 'condition') {
@@ -65,7 +63,7 @@ function executeFromNode (node, nodes, func, calcData) {
 
     const result = function (str) {
       return eval(str)
-    }.call(calcData.scope, parsedCondition)
+    }.call(calcData.scope[func], parsedCondition)
 
     if (result) nextNode = _.find(nodes[func], { id: node.children.yes })
     else nextNode = _.find(nodes[func], { id: node.children.no })
@@ -77,7 +75,7 @@ function executeFromNode (node, nodes, func, calcData) {
       match = outputVariableRegex.exec(node.output)
       if (match) {
           // TODO handle missing variables
-          matchedVariables[match[0]] = calcData.scope[match[1]]
+          matchedVariables[match[0]] = calcData.scope[func][match[1]]
       }
     } while (match)
 
@@ -85,11 +83,21 @@ function executeFromNode (node, nodes, func, calcData) {
     for (const keyVar in matchedVariables) {
       outputStr = outputStr.replaceAll(keyVar, matchedVariables[keyVar])
     }
-    calcData.outputs.push(outputStr)
+    calcData.outputs.push({ func, str: outputStr })
+  } else if (node.type === 'functionCall') {
+    const functionName = node.functionName
+    const assignReturnTo = node.assignReturnTo
+    const parameters = node.functionParameters
+
+    const funcStartNode = _.find(nodes[functionName], n => { return n.type === 'start' })
+    // TODO pass parameters
+    executeFromNode(funcStartNode, nodes, functionName, calcData)
+    // TODO assign return val
   }
 
   const memoryStateSnapshot = {
     id: _.clone(node.id),
+    func: func,
     memory: _.cloneDeep(calcData.scope)
   }
 

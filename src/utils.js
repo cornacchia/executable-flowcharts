@@ -178,15 +178,18 @@ function checkIfOnlyAddingParents (oldParents, newParents) {
 }
 
 function translateMemoryStateToHtml (memoryState) {
-  let htmlStr = '<p style="font-family=monospace;">'
-  for (const varName in memoryState.memory) {
-    let varType = 'int'
-    if (typeof memoryState.memory[varName] === 'boolean') varType = 'bool'
-    else if (Array.isArray(memoryState.memory[varName])) varType = 'collection'
-    htmlStr += varName + '&nbsp;=&nbsp;' + getVariableStringRepresentation(varType, memoryState.memory[varName]) + '<br/>'
+  let htmlStr = ''
+  for (const func in memoryState.memory) {
+    htmlStr += '<strong> --- ' + func + ' --- </strong><br/>'
+    htmlStr += '<p style="font-family=monospace;">'
+    for (const varName in memoryState.memory[func]) {
+      let varType = 'int'
+      if (typeof memoryState.memory[func][varName] === 'boolean') varType = 'bool'
+      else if (Array.isArray(memoryState.memory[func][varName])) varType = 'collection'
+      htmlStr += varName + '&nbsp;=&nbsp;' + getVariableStringRepresentation(varType, memoryState.memory[func][varName]) + '<br/>'
+    }
+    htmlStr += '</p><hr/>'
   }
-  htmlStr += '</p>'
-
   return htmlStr
 }
 
