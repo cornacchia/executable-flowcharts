@@ -60,7 +60,7 @@ function getNodeText (type, data) {
   } else if (type === 'variable') {
     for (let i = 0; i < data.variables.length; i++) {
       const variable = data.variables[i]
-      newNodeText += variable.type + ' ' + variable.name + ' = ' + utils.getVariableStringRepresentation(variable.type, variable.value)
+      newNodeText += variable.name + ' = ' + utils.getVariableStringRepresentation(variable.type, variable.value)
       if (i < data.variables.length - 1) newNodeText += '\n'
     }
   } else if (type === 'expression') {
