@@ -5,6 +5,7 @@ import Tabs from 'react-bootstrap/Tabs'
 import Tab from 'react-bootstrap/Tab'
 import Button from 'react-bootstrap/Button'
 import ListGroup from 'react-bootstrap/ListGroup'
+import Form from 'react-bootstrap/Form'
 import { ExclamationTriangle, Play } from 'react-bootstrap-icons'
 import FlowChart from 'flowchart.js'
 import StartModal from './NodeModals/StartModal'
@@ -22,22 +23,26 @@ const nodesUtils = require('./nodes')
 const flowOptions = require('./flowOptions')
 const executer = require('./executer')
 const utils = require('./utils')
+const examplePrograms = require('./examplePrograms')
+
+const baseState = {
+  nodes: { main: [] },
+  diagramStr: { main: '' },
+  selectedNodeObj: null,
+  newNodeType: '',
+  newNodeParent: null,
+  outputToShow: '',
+  memoryStates: [],
+  selectedFunc: 'main',
+  selectedExampleProgram: _.keys(examplePrograms)[0]
+}
 
 class Flow extends React.Component {
   constructor (props) {
     super(props)
     nodesUtils.initialize(this)
 
-    this.state = {
-      nodes: { main: [] },
-      diagramStr: { main: '' },
-      selectedNodeObj: null,
-      newNodeType: '',
-      newNodeParent: null,
-      outputToShow: '',
-      memoryStates: [],
-      selectedFunc: 'main'
-    }
+    this.state = _.cloneDeep(baseState)
 
     this.renderDiagram = this.renderDiagram.bind(this)
     this.drawFlowChart = this.drawFlowChart.bind(this)
@@ -64,6 +69,22 @@ class Flow extends React.Component {
     this.showExecutionFeedback = this.showExecutionFeedback.bind(this)
     this.setupFunctionBaseNodes = this.setupFunctionBaseNodes.bind(this)
     this.selectFunctionTab = this.selectFunctionTab.bind(this)
+    this.updateSelectedExampleProgram = this.updateSelectedExampleProgram.bind(this)
+    this.loadExampleProgram = this.loadExampleProgram.bind(this)
+  }
+
+  updateSelectedExampleProgram (ev) {
+    this.setState({
+      selectedExampleProgram: ev.target.value
+    })
+  }
+
+  loadExampleProgram () {
+    const newState = _.cloneDeep(baseState)
+    const programNodes = _.cloneDeep(examplePrograms[this.state.selectedExampleProgram])
+    newState.nodes = programNodes
+
+    this.setState(newState, this.renderDiagram)
   }
 
   setupFunctionBaseNodes (func) {
@@ -93,7 +114,8 @@ class Flow extends React.Component {
     const startNode = _.find(this.state.nodes.main, { nodeType: 'start' })
     const res = executer.executeFromNode(startNode, this.state.nodes, 'main', executer.getNewCalcData(this.state.nodes))
 
-    console.log(res.scope, res.outputs)
+    console.log(JSON.stringify(this.state.nodes))
+    // console.log(res.scope, res.outputs)
 
     this.showExecutionFeedback(res)
   }
@@ -115,7 +137,7 @@ class Flow extends React.Component {
     for (const func in this.state.nodes) {
       const funcStr = nodesUtils.convertToDiagramStr(this.state.nodes[func])
       diagramStr[func] = funcStr
-      console.log(func, diagramStr[func])
+      // console.log(func, diagramStr[func])
     }
 
 
@@ -370,6 +392,21 @@ class Flow extends React.Component {
   render () {
     return (
       <div>
+        <Row>
+          <h3>Carica programma di esempio</h3>
+          <Col xs={3}>
+            <Form.Select value={this.state.selectedExampleProgram} onChange={this.updateSelectedExampleProgram}>
+              {_.keys(examplePrograms).map((progName, idx) => {
+                return (
+                  <option key={idx} value={progName}>{progName}</option>
+                )
+              })}
+            </Form.Select>
+          </Col>
+          <Col xs={3}>
+            <Button variant='primary' onClick={this.loadExampleProgram}>Carica</Button>
+          </Col>
+        </Row>
         <Row>
           <h3>Aggiungi nodo</h3>
           <AddChildButtons addChildCallback={this.addNode} node={null} branch='main' />

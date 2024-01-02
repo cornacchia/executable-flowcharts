@@ -1,0 +1,5 @@
+const SwapVariables = {"main":[{"type":"start","nodeType":"start","id":1,"parents":[],"children":{"main":3},"selected":false},{"type":"end","nodeType":"end","id":2,"parents":[{"id":6,"branch":"main"}],"children":{"main":-1},"selected":false},{"type":"variable","nodeType":"operation","id":3,"parents":[{"id":1,"branch":"main"}],"children":{"main":4},"selected":false,"variables":[{"id":0,"type":"int","name":"value1","value":"1"},{"id":1,"type":"int","name":"value2","value":"5"},{"id":2,"type":"int","name":"tempValue","value":0}]},{"type":"output","nodeType":"inputoutput","id":4,"parents":[{"id":3,"branch":"main"}],"children":{"main":5},"selected":false,"output":"value1 = $value1; value2 = $value2"},{"type":"expression","nodeType":"operation","id":5,"parents":[{"id":4,"branch":"main"}],"children":{"main":6},"selected":false,"expressions":["tempValue = value1","value1 = value2","value2 = value1"]},{"type":"output","nodeType":"inputoutput","id":6,"parents":[{"id":5,"branch":"main"}],"children":{"main":2},"selected":false,"output":"value1 = $value1; value2 = $value2"}]}
+
+module.exports = {
+  SwapVariables
+}

@@ -2,7 +2,7 @@ const _ = require('lodash')
 const booleanExpression = require('boolean-expression')
 
 const accessArrayRegex = /^([a-zA-Z][a-zA-Z\d]*)\[([a-zA-Z\d]{0,})\]$/
-const outputVariableRegex = /\$([a-zA-Z]+[a-zA-Z\d]*)/
+const outputVariableRegex = /\$([a-zA-Z]+[a-zA-Z\d]*)/g
 
 function getNewCalcData (nodes) {
   const calcData = { scope: {}, outputs: [], memoryStates: [], parameters: {}, returnVal: {} }
