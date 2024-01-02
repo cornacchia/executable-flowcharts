@@ -12,13 +12,7 @@ import AddChildButtons from './AddChildButtons'
 const _ = require('lodash')
 const utils = require('../utils')
 
-const defaultValues = {
-  int: 0,
-  bool: 'true',
-  collection: [0]
-}
-
-const defaultVariableType = 'int'
+const defaultVariableValue = 0
 
 const baseState = {
     // Parent nodes
@@ -26,25 +20,21 @@ const baseState = {
     disabledParents: null,
     currentlySelectedParents: [],
 
-    // Variables
-    currentVariableId: -1,
+    // Parameters
     definedVariables: [],
-    selectedVariableType: defaultVariableType,
     currentVariableName: '',
-    currentVariableValue: _.cloneDeep(defaultValues[defaultVariableType]),
+    currentVariableValue: _.clone(defaultVariableValue),
     okToAddNode: false
 }
 
-class VariableModal extends React.Component {
+class ReadParameterModal extends React.Component {
   constructor (props) {
     super(props)
 
     this.state = _.cloneDeep(baseState)
 
     this.updateCurrentVariableName = this.updateCurrentVariableName.bind(this)
-    this.updateCurrentVariableValueInt = this.updateCurrentVariableValueInt.bind(this)
-    this.updateCurrentVariableValueBool = this.updateCurrentVariableValueBool.bind(this)
-    this.updateCurrentVariableValueCollection = this.updateCurrentVariableValueCollection.bind(this)
+    this.updateCurrentVariableValue = this.updateCurrentVariableValue.bind(this)
     this.disableAddVariableButton = this.disableAddVariableButton.bind(this)
     this.addVariable = this.addVariable.bind(this)
     this.removeVariable = this.removeVariable.bind(this)
@@ -53,8 +43,6 @@ class VariableModal extends React.Component {
     this.updateNode = this.updateNode.bind(this)
     this.selectParents = this.selectParents.bind(this)
     this.resetState = this.resetState.bind(this)
-    this.changeVariableType = this.changeVariableType.bind(this)
-    this.updateCollectionElement = this.updateCollectionElement.bind(this)
   }
 
   componentDidMount () {
@@ -74,18 +62,13 @@ class VariableModal extends React.Component {
     // Parent nodes
     utils.assignParentsOnReset(newState, this.props.node, this.props.nodes, this.props.parents)
 
+    // Variables
     let definedVariables = []
     if (!_.isNil(this.props.node)) {
       definedVariables = this.props.node.variables
     }
 
-    let currentVariableId = -1
-    for (const definedVar of definedVariables) {
-      if (definedVar.id > currentVariableId) currentVariableId = definedVar.id
-    }
-
     // Variables
-    newState.currentVariableId = currentVariableId
     newState.definedVariables = definedVariables
 
     this.setState(newState)
@@ -109,56 +92,14 @@ class VariableModal extends React.Component {
     return false
   }
 
-  updateCurrentVariableValueInt (ev) {
+  updateCurrentVariableValue (ev) {
     this.setState({
       currentVariableValue: ev.target.value
     })
   }
 
-  updateCurrentVariableValueBool (ev) {
-    this.setState({
-      currentVariableValue: ev.target.value === 'true'
-    })
-  }
-
-  updateCurrentVariableValueCollection (ev) {
-    const newCollectionLength = _.max([ev.target.value, 1])
-    let varValue = this.state.currentVariableValue
-    if (newCollectionLength > varValue.length) {
-      while (varValue.length < newCollectionLength) varValue.push(0)
-    } else if (newCollectionLength < varValue.length) {
-      varValue = []
-      for (let i = 0; i < newCollectionLength; i++) {
-        varValue.push(this.state.currentVariableValue[i])
-      }
-    }
-
-    this.setState({ currentVariableValue: varValue })
-  }
-
-  updateCollectionElement (idx, val) {
-    const currCollection = this.state.currentVariableValue
-    currCollection[idx] = parseInt(val)
-
-    this.setState({
-      currentVariableValue: currCollection
-    })
-  }
-
-  changeVariableType (evt) {
-    const newVariableType = evt.target.value
-    const newVariableValue = _.cloneDeep(defaultValues[newVariableType])
-
-    this.setState({
-      selectedVariableType: newVariableType,
-      currentVariableValue: newVariableValue
-    })
-  }
-
   addVariable () {
-    const nextId = this.state.currentVariableId + 1
     const newVariable = {
-      id: nextId,
       type: this.state.selectedVariableType,
       name: this.state.currentVariableName,
       value: this.state.currentVariableValue
@@ -168,16 +109,14 @@ class VariableModal extends React.Component {
     stateVariables.push(newVariable)
 
     this.setState({
-      currentVariableId: nextId,
       definedVariables: stateVariables,
-      selectedVariableType: defaultVariableType,
       currentVariableName: '',
-      currentVariableValue: _.cloneDeep(defaultValues[defaultVariableType])
+      currentVariableValue: _.clone(defaultVariableValue)
     }, this.validate)
   }
 
-  removeVariable (id) {
-    const newVariables = _.filter(this.state.definedVariables, v => { return v.id !== id })
+  removeVariable (idx) {
+    const newVariables = _.filter(this.state.definedVariables, (v, i) => { return i !== idx })
     this.setState({
       definedVariables: newVariables
     }, this.validate)
@@ -217,7 +156,6 @@ class VariableModal extends React.Component {
     }
 
     this.props.updateNodeCallback(data, this.props.closeCallback)
-    // this.props.closeCallback()
   }
 
   render () {
@@ -232,7 +170,7 @@ class VariableModal extends React.Component {
             }
             {_.isNil(this.props.node) &&
               <span>
-                Nuovo nodo (variable)
+                Nuovo nodo (read parameters)
               </span>
             }
           </Modal.Title>
@@ -240,7 +178,7 @@ class VariableModal extends React.Component {
 
         <Modal.Body>
           <Row>
-            <h3>Variabili:</h3>
+            <h3>Parametri letti:</h3>
             <Col xs={12}>
               {this.state.definedVariables.map((variable, idx) => {
                 return (
@@ -251,7 +189,7 @@ class VariableModal extends React.Component {
                       </Button>
                     </Col>
                     <Col xs={8} style={{ textAlign: 'left' }}>
-                      <strong>{variable.name}&nbsp;=&nbsp;{utils.getVariableStringRepresentation(variable.type, variable.value)}</strong>
+                      <strong>{variable.name}&nbsp;=&nbsp;parametri[{variable.value}]</strong>
                     </Col>
                   </Row>
                 )
@@ -262,7 +200,7 @@ class VariableModal extends React.Component {
           <hr />
 
           <Row>
-            <h3>Aggiungi variabile</h3>
+            <h3>Leggi parametro in variabile</h3>
             <Col xs={12}>
               <Form.Group>
                 <Form.Label htmlFor='variableName'>Nome:</Form.Label>
@@ -271,68 +209,18 @@ class VariableModal extends React.Component {
                   Il nome della variabile deve iniziare con una lettera dell'alfabeto e contenere solo lettere e numeri.
                 </Form.Text>
               </Form.Group>
-
               <Form.Group>
-                <Form.Label htmlFor='variableType'>Tipo:</Form.Label>
-                <Form.Select value={this.state.selectedVariableType} onChange={this.changeVariableType}>
-                  <option value='int'>Numero intero</option>
-                  <option value='bool'>Booleano</option>
-                  <option value='collection'>Collezione</option>
-                </Form.Select>
+                <Form.Label htmlFor='variableValue'>Parametro:</Form.Label>
+                <Form.Control
+                  type='number'
+                  id='variableValue'
+                  value={this.state.currentVariableValue}
+                  onChange={this.updateCurrentVariableValue}
+                />
               </Form.Group>
 
-              {this.state.selectedVariableType === 'int' &&
-                <Form.Group>
-                  <Form.Label htmlFor='variableValue'>Valore:</Form.Label>
-                  <Form.Control
-                    type='number'
-                    id='variableValue'
-                    value={this.state.currentVariableValue}
-                    onChange={this.updateCurrentVariableValueInt}
-                  />
-                </Form.Group>
-              }
-
-              {this.state.selectedVariableType === 'bool' &&
-                <Form.Group>
-                  <Form.Label>Valore:</Form.Label>
-                  <Form.Select value={this.state.currentVariableValue.toString()} onChange={this.updateCurrentVariableValueBool}>
-                    <option value='true'>true</option>
-                    <option value='false'>false</option>
-                  </Form.Select>
-                </Form.Group>
-              }
-
-              {this.state.selectedVariableType === 'collection' &&
-                <Form.Group>
-                  <Form.Label>Numero di elementi:</Form.Label>
-                  <Form.Control
-                    type='number'
-                    value={this.state.currentVariableValue.length}
-                    onChange={this.updateCurrentVariableValueCollection}
-                  />
-
-                  <Form.Label>Valori iniziali:</Form.Label>
-                  <Row>
-                    {this.state.currentVariableValue.map((el, idx) => {
-                      return (
-                        <Col xs={4} key={idx}>
-                          <Form.Control
-                            type='number'
-                            value={el}
-                            onChange={evt => { this.updateCollectionElement(idx, evt.target.value)}}
-                          />
-                        </Col>
-                      )
-                    })}
-                  </Row>
-
-                </Form.Group>
-              }
-
-
               <Button style={{ marginTop: '20px' }} variant='primary' disabled={this.disableAddVariableButton()} onClick={this.addVariable}>
-                + Aggiungi variabile al nodo
+                + Aggiungi parametro al nodo
               </Button>
             </Col>
           </Row>
@@ -373,7 +261,7 @@ class VariableModal extends React.Component {
   }
 }
 
-VariableModal.propTypes = {
+ReadParameterModal.propTypes = {
   show: PropTypes.bool,
   closeCallback: PropTypes.func,
   node: PropTypes.object,
@@ -384,4 +272,4 @@ VariableModal.propTypes = {
   updateNodeCallback: PropTypes.func
 }
 
-export default VariableModal
+export default ReadParameterModal

@@ -14,6 +14,7 @@ import ConditionModal from './NodeModals/ConditionModal'
 import OutputModal from './NodeModals/OutputModal'
 import FunctionCallModal from './NodeModals/FunctionCallModal'
 import ReturnValueModal from './NodeModals/ReturnValueModal'
+import ReadParameterModal from './NodeModals/ReadParameterModal'
 import AddChildButtons from './NodeModals/AddChildButtons'
 
 const _ = require('lodash')
@@ -52,12 +53,14 @@ class Flow extends React.Component {
     this.addOutputNode = this.addOutputNode.bind(this)
     this.addFunctionCallNode = this.addFunctionCallNode.bind(this)
     this.addReturnValueNode = this.addReturnValueNode.bind(this)
+    this.addReadParametersNode = this.addReadParametersNode.bind(this)
     this.shouldShowStartModal = this.shouldShowStartModal.bind(this)
     this.shouldShowVariableModal = this.shouldShowVariableModal.bind(this)
     this.shouldShowExpressionModal = this.shouldShowExpressionModal.bind(this)
     this.shouldShowOutputModal = this.shouldShowOutputModal.bind(this)
     this.shouldShowFunctionCallModal = this.shouldShowFunctionCallModal.bind(this)
     this.shouldShowReturnValueModal = this.shouldShowReturnValueModal.bind(this)
+    this.shouldShowReadParametersModal = this.shouldShowReadParametersModal.bind(this)
     this.showExecutionFeedback = this.showExecutionFeedback.bind(this)
     this.setupFunctionBaseNodes = this.setupFunctionBaseNodes.bind(this)
     this.selectFunctionTab = this.selectFunctionTab.bind(this)
@@ -303,6 +306,20 @@ class Flow extends React.Component {
     this.renderDiagram()
   }
 
+  addReadParametersNode (data) {
+    const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
+    const newReadParametersNode = nodesUtils.getNewNode('readParameters', data)
+
+    for (const parentInfo of data.parents) {
+      const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
+      nodesUtils.connectNodes(newNodeParent, parentInfo.branch, newReadParametersNode, selectedFuncNodes)
+    }
+
+    selectedFuncNodes.push(newReadParametersNode)
+
+    this.renderDiagram()
+  }
+
   shouldShowStartModal () {
     return !_.isNil(this.state.selectedNodeObj) &&
       this.state.selectedNodeObj.type === 'start'
@@ -342,6 +359,12 @@ class Flow extends React.Component {
     return (!_.isNil(this.state.selectedNodeObj) &&
     this.state.selectedNodeObj.type === 'returnValue') ||
     (this.state.newNodeType === 'returnValue')
+  }
+
+  shouldShowReadParametersModal () {
+    return (!_.isNil(this.state.selectedNodeObj) &&
+    this.state.selectedNodeObj.type === 'readParameters') ||
+    (this.state.newNodeType === 'readParameters')
   }
 
   render () {
@@ -498,6 +521,19 @@ class Flow extends React.Component {
             closeCallback={this.unselectNode}
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addReturnValueNode}
+            updateNodeCallback={this.updateNode}
+          />
+        }
+
+        {this.shouldShowReadParametersModal() &&
+          <ReadParameterModal
+            node={this.state.selectedNodeObj}
+            nodes={this.state.nodes[this.state.selectedFunc]}
+            parents={this.state.selectedNodeParents}
+            show={this.shouldShowReadParametersModal()}
+            closeCallback={this.unselectNode}
+            addChildCallback={this.addNode}
+            addNewNodeCallback={this.addReadParametersNode}
             updateNodeCallback={this.updateNode}
           />
         }

@@ -35,6 +35,10 @@ const NODES = {
   returnValue: {
     type: 'returnValue',
     nodeType: 'operation'
+  },
+  readParameters: {
+    type: 'readParameters',
+    nodeType: 'operation'
   }
 }
 
@@ -83,7 +87,13 @@ function getNodeText (type, data) {
     }
     newNodeText += ')'
   } else if (type === 'returnValue') {
-    newNodeText += 'return ' + JSON.stringify(data.returnValue)
+    newNodeText += 'return = ' + JSON.stringify(data.returnValue)
+  } else if (type === 'readParameters') {
+    for (let i = 0; i < data.variables.length; i++) {
+      const variable = data.variables[i]
+      newNodeText += variable.name + ' = parametri[' + variable.value + ']'
+      if (i < data.variables.length - 1) newNodeText += '\n'
+    }
   }
 
   return newNodeText
@@ -120,6 +130,8 @@ function getNewNode (type, data) {
   } else if (type === 'returnValue') {
     newNode.returnType = data.returnType
     newNode.returnValue = data.returnValue
+  } else if (type === 'readParameters') {
+    newNode.variables = _.cloneDeep(data.variables)
   }
 
   return newNode
@@ -141,6 +153,8 @@ function updateNodeContents (nodeObj, data) {
   } else if (nodeObj.type === 'returnValue') {
     nodeObj.returnType = data.returnType
     nodeObj.returnValue = data.returnValue
+  } else if (nodeObj.type === 'readParameters') {
+    nodeObj.variables = _.cloneDeep(data.variables)
   }
 
   return nodeObj

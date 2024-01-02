@@ -7,6 +7,7 @@ import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import SelectParents from './SelectParents'
 import AddChildButtons from './AddChildButtons'
+import { Cpu } from 'react-bootstrap-icons'
 
 const _ = require('lodash')
 const utils = require('../utils')
@@ -49,6 +50,14 @@ class ReturnValueModal extends React.Component {
     this.resetState()
   }
 
+  componentDidUpdate (prevProps) {
+    if (prevProps.node) {
+      // Check if we are adding a child of the same type to a node
+      // we are updating
+      if (_.isNil(this.props.node)) this.resetState()
+    }
+  }
+
   resetState () {
     const newState = _.cloneDeep(baseState)
 
@@ -65,7 +74,7 @@ class ReturnValueModal extends React.Component {
   }
 
   updateReturnType (ev) {
-    const newType = ev.target.type
+    const newType = ev.target.value
     this.setState({
       returnType: newType,
       returnValue: _.cloneDeep(defaultValues[newType])
@@ -143,31 +152,36 @@ class ReturnValueModal extends React.Component {
             <Col xs={12}>
               <Form.Group>
                 <Form.Label>Valore da ritornare:</Form.Label>
-                <Form.Select value={this.state.returnType} onChange={this.updateReturnType}>
-                  <option value='int'>Numero intero</option>
-                  <option value='bool'>Booleano</option>
-                  <option value='variableName'>Variabile</option>
-                </Form.Select>
-
-                {this.state.returnType === 'int' &&
-                  <Form.Control
-                    type='number'
-                    value={this.state.returnValue}
-                    onChange={this.updateReturnValue}
-                  />
-                }
-                {this.state.returnType === 'bool' &&
-                  <Form.Select value={this.state.returnValue} onChange={this.updateReturnValue}>
-                    <option value='true'>true</option>
-                    <option value='false'>false</option>
+                <Row>
+                  <Col xs={4}>
+                  <Form.Select value={this.state.returnType} onChange={this.updateReturnType}>
+                    <option value='int'>Numero intero</option>
+                    <option value='bool'>Booleano</option>
+                    <option value='variableName'>Variabile</option>
                   </Form.Select>
-                }
-                {this.state.returnType === 'variableName' &&
-                  <Form.Control
-                    value={this.state.returnValue}
-                    onChange={this.updateReturnValue}
-                  />
-                }
+                  </Col>
+                  <Col xs={8}>
+                    {this.state.returnType === 'int' &&
+                      <Form.Control
+                        type='number'
+                        value={this.state.returnValue}
+                        onChange={this.updateReturnValue}
+                      />
+                    }
+                    {this.state.returnType === 'bool' &&
+                      <Form.Select value={this.state.returnValue} onChange={this.updateReturnValue}>
+                        <option value='true'>true</option>
+                        <option value='false'>false</option>
+                      </Form.Select>
+                    }
+                    {this.state.returnType === 'variableName' &&
+                      <Form.Control
+                        value={this.state.returnValue}
+                        onChange={this.updateReturnValue}
+                      />
+                    }
+                  </Col>
+                </Row>
               </Form.Group>
             </Col>
           </Row>

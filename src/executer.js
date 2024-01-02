@@ -89,6 +89,14 @@ function executeFromNode (node, nodes, func, calcData) {
     const assignReturnValTo = node.assignReturnValTo
     const parameters = node.functionParameters
 
+    if (parameters.length > 0) {
+      const newParameters = []
+      for (const parameter of parameters) {
+        newParameters.push(parameter.value)
+      }
+      calcData.parameters[functionName] = newParameters
+    }
+
     const funcStartNode = _.find(nodes[functionName], n => { return n.type === 'start' })
     // TODO pass parameters
     executeFromNode(funcStartNode, nodes, functionName, calcData)
@@ -96,12 +104,13 @@ function executeFromNode (node, nodes, func, calcData) {
     if (assignReturnValTo !== '') {
       // TODO handle missing variable
       calcData.scope[func][assignReturnValTo] = calcData.returnVal[functionName]
-
     }
 
     if (!_.isNil(calcData.returnVal[functionName])) {
       // "Consume" the return value
       calcData.returnVal[functionName] = null
+      // Delete parameters
+      calcData.parameters[functionName] = []
     }
   } else if (node.type === 'returnValue') {
     const returnType = node.returnType
@@ -111,6 +120,11 @@ function executeFromNode (node, nodes, func, calcData) {
       returnValue = _.cloneDeep(calcData.scope[func][returnValue])
     }
     calcData.returnVal[func] = returnValue
+  } else if (node.type === 'readParameters') {
+    for (const variable of node.variables) {
+      // TODO handle missing parameter
+      calcData.scope[func][variable.name] = calcData.parameters[func][variable.value]
+    }
   }
 
   const memoryStateSnapshot = {
