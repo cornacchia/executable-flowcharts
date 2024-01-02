@@ -15,25 +15,25 @@ class AddChildButtons extends React.Component {
     return (
       <ButtonGroup>
         <Button variant='dark' onClick={() => {this.props.addChildCallback('variable', this.props.node, this.props.branch)}}>
-          + Variabili <Clipboard />
+          Variabili <Clipboard />
         </Button>
         <Button variant='secondary' onClick={() => {this.props.addChildCallback('expression', this.props.node, this.props.branch)}}>
-          + Espressione <Calculator />
+          Espressione <Calculator />
         </Button>
         <Button variant='dark' onClick={() => {this.props.addChildCallback('condition', this.props.node, this.props.branch)}}>
-          + Condizione <SignpostSplit />
+          Condizione <SignpostSplit />
         </Button>
         <Button variant='secondary' onClick={() => {this.props.addChildCallback('output', this.props.node, this.props.branch)}}>
-          + Output <Printer />
+          Output <Printer />
         </Button>
         <Button variant='dark' onClick={() => {this.props.addChildCallback('functionCall', this.props.node, this.props.branch)}}>
-          + Funzione <CaretRightSquare />
+          Funzione <CaretRightSquare />
         </Button>
         <Button variant='secondary' onClick={() => {this.props.addChildCallback('readParameters', this.props.node, this.props.branch)}}>
-          + Leggi parametri <BoxArrowDown />
+          Leggi parametri <BoxArrowDown />
         </Button>
         <Button variant='dark' onClick={() => {this.props.addChildCallback('returnValue', this.props.node, this.props.branch)}}>
-          + Ritorna valore <BoxArrowUp />
+          Ritorna valore <BoxArrowUp />
         </Button>
       </ButtonGroup>
     )
