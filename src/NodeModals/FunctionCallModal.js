@@ -124,7 +124,7 @@ class FunctionCallModal extends React.Component {
     } else {
       const newParameter = {
         type: val,
-        value: _.cloneDeep(defaultValues)
+        value: _.cloneDeep(defaultValues[val])
       }
 
       parameters[idx] = newParameter
