@@ -59,12 +59,12 @@ class ExpressionModal extends React.Component {
     // Parent nodes
     utils.assignParentsOnReset(newState, this.props.node, this.props.nodes, this.props.parents)
 
-    let expression = ''
+    let expressions = []
     if (!_.isNil(this.props.node)) {
-      expression = this.props.node.expression
+      expressions = this.props.node.expressions
     }
 
-    newState.expression = expression
+    newState.expressions = expressions
 
     this.setState(newState)
   }
