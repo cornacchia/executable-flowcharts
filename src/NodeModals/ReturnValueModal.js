@@ -7,7 +7,6 @@ import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import SelectParents from './SelectParents'
 import AddChildButtons from './AddChildButtons'
-import { Cpu } from 'react-bootstrap-icons'
 
 const _ = require('lodash')
 const utils = require('../utils')

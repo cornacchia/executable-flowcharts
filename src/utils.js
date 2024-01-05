@@ -183,6 +183,7 @@ function translateMemoryStateToHtml (memoryState) {
     htmlStr += '<strong> --- ' + func + ' --- </strong><br/>'
     htmlStr += '<p style="font-family=monospace;">'
     for (const varName in memoryState.memory[func]) {
+      if (typeof memoryState.memory[func][varName] === 'function') continue
       let varType = 'int'
       if (typeof memoryState.memory[func][varName] === 'boolean') varType = 'bool'
       else if (Array.isArray(memoryState.memory[func][varName])) varType = 'collection'
@@ -211,6 +212,12 @@ function validateVariableOrFunctionName (name) {
   return false
 }
 
+function getDefinedFunctions (nodes) {
+  const functionNames = _.keys(nodes)
+  _.remove(functionNames, n => { return n === 'main' })
+  return functionNames
+}
+
 module.exports = {
   getNodeConnections,
   getParentNodeData,
@@ -222,5 +229,6 @@ module.exports = {
   checkIfOnlyAddingParents,
   translateMemoryStateToHtml,
   getVariableStringRepresentation,
-  validateVariableOrFunctionName
+  validateVariableOrFunctionName,
+  getDefinedFunctions
 }

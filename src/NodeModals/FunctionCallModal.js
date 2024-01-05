@@ -164,7 +164,6 @@ class FunctionCallModal extends React.Component {
   validate () {
     let okToAddNode = true
     if (this.state.functionName === '') okToAddNode = false
-    if (this.state.currentlySelectedParents.length === 0) okToAddNode = false
 
     this.setState({
       okToAddNode
@@ -205,124 +204,24 @@ class FunctionCallModal extends React.Component {
       <Modal show={this.props.show} onHide={this.props.closeCallback} size='lg'>
         <Modal.Header closeButton>
           <Modal.Title>
-            {!_.isNil(this.props.node) &&
-              <span>
-                Nodo {this.props.node.id} ({this.props.node.type})
-              </span>
-            }
-            {_.isNil(this.props.node) &&
-              <span>
-                Nuovo nodo (function call)
-              </span>
-            }
+            Aggiungi funzione al programma
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Row>
-            <Col>
-              {this.state.assignReturnValTo &&
-                <div style={inlineDivStyle}>{this.state.assignReturnValTo}&nbsp;=&nbsp;</div>
-              }
-              {this.state.functionName &&
-                <div style={inlineDivStyle}>{this.state.functionName}(</div>
-              }
-              {this.state.functionParameters.map((par, idx) => {
-                return (
-                  <div style={inlineDivStyle} key={idx}>{par.value}{idx < this.state.functionParameters.length - 1 && ','}</div>
-                )
-              })}
-              {this.state.functionName &&
-                <div style={inlineDivStyle}>)</div>
-              }
-            </Col>
-          </Row>
-          <hr />
           <Row>
             <Col xs={12}>
               <Form.Group>
                 <Form.Label>Nome della funzione:</Form.Label>
                 <Form.Control value={this.state.functionName} onChange={this.updateFunctionName}/>
               </Form.Group>
-              <Form.Group>
-                <Form.Label>Assegna risultato a variabile:</Form.Label>
-                <Form.Control value={this.state.assignReturnValTo} onChange={this.updateAssignReturn} />
-              </Form.Group>
-              <Form.Group style={{ marginTop: '10px' }}>
-                <Button variant='primary' onClick={this.addParameter}>
-                  Aggiungi parametro
-                </Button>
-              </Form.Group>
-              <hr />
-              {this.state.functionParameters.map((par, idx) => {
-                return (
-                  <Form.Group key={idx}>
-                    <Form.Label>Parametro {idx}:</Form.Label>
-                    <Row>
-                      <Col xs={5}>
-                        <Form.Select value={par.type} onChange={ev => { this.updateParameterType(idx, ev.target.value)}}>
-                          <option value='int'>Numero intero</option>
-                          <option value='bool'>Booleano</option>
-                          <option value='variableName'>Variabile</option>
-                        </Form.Select>
-                      </Col>
-                      <Col xs={5}>
-                        {par.type === 'int' &&
-                          <Form.Control
-                            type='number'
-                            value={par.value}
-                            onChange={ev => { this.updateParameterValue(idx, ev.target.value)}}
-                          />
-                        }
-                        {par.type === 'bool' &&
-                          <Form.Select value={par.value} onChange={ev => { this.updateParameterValue(idx, ev.target.value ) }}>
-                            <option value='true'>true</option>
-                            <option value='false'>false</option>
-                          </Form.Select>
-                        }
-                        {par.type === 'variableName' &&
-                          <Form.Control
-                            value={par.value}
-                            onChange={ev => { this.updateParameterValue(idx, ev.target.value)}}
-                          />
-                        }
-                      </Col>
-                      <Col xs={2}>
-                        <Button variant='danger' onClick={() => { this.removeParameter(idx) }}>
-                          <Trash />
-                        </Button>
-                      </Col>
-                    </Row>
-                  </Form.Group>
-                )
-              })}
-            </Col>
-          </Row>
-          <Row>
-            <Col xs={12}>
-              {!_.isNil(this.state.selectedParents) &&
-                <SelectParents node={this.props.node} nodes={this.props.nodes} selectedParents={this.state.selectedParents} disabledParents={this.state.disabledParents} selectCallback={this.selectParents}/>
-              }
             </Col>
           </Row>
         </Modal.Body>
 
         <Modal.Footer>
-          {!_.isNil(this.props.node) &&
-            <div>
-              <h3>Aggiungi successori:</h3>
-              <AddChildButtons node={this.props.node} addChildCallback={this.props.addChildCallback} branch='main' />
-            </div>
-          }
-
-          {!_.isNil(this.props.node) &&
-            <Button variant='success' disabled={!this.state.okToAddNode} onClick={this.updateNode}>
-              Aggiorna nodo
-            </Button>
-          }
-
           {_.isNil(this.props.node) &&
             <Button variant='success' disabled={!this.state.okToAddNode} onClick={this.addNode}>
-              Aggiungi nodo
+              Aggiungi
             </Button>
           }
         </Modal.Footer>

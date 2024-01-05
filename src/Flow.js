@@ -6,7 +6,7 @@ import Tab from 'react-bootstrap/Tab'
 import Button from 'react-bootstrap/Button'
 import ListGroup from 'react-bootstrap/ListGroup'
 import Form from 'react-bootstrap/Form'
-import { ExclamationTriangle, Play } from 'react-bootstrap-icons'
+import { ExclamationTriangle, Play, Diagram2, Clipboard } from 'react-bootstrap-icons'
 import FlowChart from 'flowchart.js'
 import StartModal from './NodeModals/StartModal'
 import VariableModal from './NodeModals/VariableModal'
@@ -56,7 +56,7 @@ class Flow extends React.Component {
     this.addExpressionNode = this.addExpressionNode.bind(this)
     this.addConditionNode = this.addConditionNode.bind(this)
     this.addOutputNode = this.addOutputNode.bind(this)
-    this.addFunctionCallNode = this.addFunctionCallNode.bind(this)
+    this.addFunction = this.addFunction.bind(this)
     this.addReturnValueNode = this.addReturnValueNode.bind(this)
     this.addReadParametersNode = this.addReadParametersNode.bind(this)
     this.shouldShowStartModal = this.shouldShowStartModal.bind(this)
@@ -111,10 +111,11 @@ class Flow extends React.Component {
   }
 
   executeFlowchart () {
+    // console.log(JSON.stringify(this.state.nodes))
+
     const startNode = _.find(this.state.nodes.main, { nodeType: 'start' })
     const res = executer.executeFromNode(startNode, this.state.nodes, 'main', executer.getNewCalcData(this.state.nodes))
 
-    console.log(JSON.stringify(this.state.nodes))
     // console.log(res.scope, res.outputs)
 
     this.showExecutionFeedback(res)
@@ -288,17 +289,7 @@ class Flow extends React.Component {
     this.renderDiagram()
   }
 
-  addFunctionCallNode (data) {
-    const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
-    const newOutputNode = nodesUtils.getNewNode('functionCall', data)
-
-    for (const parentInfo of data.parents) {
-      const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
-      nodesUtils.connectNodes(newNodeParent, parentInfo.branch, newOutputNode, selectedFuncNodes)
-    }
-
-    selectedFuncNodes.push(newOutputNode)
-
+  addFunction (data) {
     const functionName = data.functionName
     if (_.isNil(this.state.nodes[functionName])) {
       const nodes = this.state.nodes
@@ -309,8 +300,6 @@ class Flow extends React.Component {
         this.setupFunctionBaseNodes(functionName)
         this.renderDiagram()
       })
-    } else {
-      this.renderDiagram()
     }
   }
 
@@ -408,6 +397,14 @@ class Flow extends React.Component {
           </Col>
         </Row>
         <Row>
+          <h3>Aggiungi funzione</h3>
+          <Col>
+            <Button variant='primary' onClick={() => { this.addNode('functionCall') }}>
+              Aggiungi
+            </Button>
+          </Col>
+        </Row>
+        <Row>
           <h3>Aggiungi nodo</h3>
           <AddChildButtons addChildCallback={this.addNode} node={null} branch='main' />
         </Row>
@@ -468,7 +465,7 @@ class Flow extends React.Component {
           {this.state.memoryStates.map((state, idx) => {
             return (
               <Col className='memoryStateElement' xs={2} key={idx}>
-                <strong>Nodo eseguito:&nbsp;{state.id} ({state.func})</strong>
+                <strong><Diagram2 />&nbsp;{state.id} ({state.func})</strong>
                 <div dangerouslySetInnerHTML={{ __html: utils.translateMemoryStateToHtml(state) }}></div>
               </Col>
             )
@@ -544,7 +541,7 @@ class Flow extends React.Component {
             show={this.shouldShowFunctionCallModal()}
             closeCallback={this.unselectNode}
             addChildCallback={this.addNode}
-            addNewNodeCallback={this.addFunctionCallNode}
+            addNewNodeCallback={this.addFunction}
             updateNodeCallback={this.updateNode}
           />
         }

@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const nodes = require('./nodes')
 const executer = require('./executer')
+const examplePrograms = require('./examplePrograms')
 
 function testUpdateNode (startNodes, updates, expectedNodes) {
   let newNodes = []
@@ -63,18 +64,28 @@ function testExecuteNodes (nodes, expectedResult) {
     return false
   }
 
-  for (const func in res.scope) {
-    if (_.keys(res.scope[func]).length !== _.keys(expectedResult.scope[func]).length) {
+  const scopeToAnalyze = {}
+  for (const func in res.scop) {
+    scopeToAnalyze[func] = {}
+    for (const key in res.scope[func]) {
+      if (typeof res.scope[func][key] === 'function') continue
+      scopeToAnalyze[func][key] = res.scope[func][key]
+    }
+  }
+
+
+  for (const func in scopeToAnalyze) {
+    if (_.keys(scopeToAnalyze[func]).length !== _.keys(expectedResult.scope[func]).length) {
       console.log('!!! Different scope variables(' + func + '), expected: ', JSON.stringify(_.keys(expectedResult.scope[func])), 'found:', _.keys(res.scope[func]))
       return false
     }
   
-    for (const key in res.scope[func]) {
+    for (const key in scopeToAnalyze[func]) {
       if (_.isNil(expectedResult.scope[func][key])) {
         console.log('!!! Different scope variables(' + func + '), expected: ', JSON.stringify(expectedResult.scope[func]), 'found:', JSON.stringify(res.scope[func]))
         return false
       }
-      if (!_.isEqual(res.scope[func][key], expectedResult.scope[func][key])) {
+      if (!_.isEqual(scopeToAnalyze[func][key], expectedResult.scope[func][key])) {
         console.log('!!! Different scope variable values(' + func + '), expected: ', JSON.stringify(expectedResult.scope[func]), 'found:', JSON.stringify(res.scope[func]))
         return false
       }
@@ -305,6 +316,21 @@ const TESTS_EXEC = {
           max: 9,
           i: 5,
           len: 5
+        }
+      }
+    }
+  },
+  exec6: {
+    log: 'Factorial recursive function',
+    f: testExecuteNodes,
+    s: examplePrograms.Factorial,
+    r: {
+      error: false,
+      scope: {
+        main: { f1: 24 },
+        factorial: {
+          params: [2],
+          res: 24
         }
       }
     }

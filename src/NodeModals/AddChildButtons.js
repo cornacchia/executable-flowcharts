@@ -26,12 +26,6 @@ class AddChildButtons extends React.Component {
         <Button variant='secondary' onClick={() => {this.props.addChildCallback('output', this.props.node, this.props.branch)}}>
           Output <Printer />
         </Button>
-        <Button variant='dark' onClick={() => {this.props.addChildCallback('functionCall', this.props.node, this.props.branch)}}>
-          Funzione <CaretRightSquare />
-        </Button>
-        <Button variant='secondary' onClick={() => {this.props.addChildCallback('readParameters', this.props.node, this.props.branch)}}>
-          Leggi parametri <BoxArrowDown />
-        </Button>
         <Button variant='dark' onClick={() => {this.props.addChildCallback('returnValue', this.props.node, this.props.branch)}}>
           Ritorna valore <BoxArrowUp />
         </Button>

@@ -1,41 +1,34 @@
 const _ = require('lodash')
-const booleanExpression = require('boolean-expression')
+const parseExpressions = require('./parseExpressions')
 
-const accessArrayRegex = /^([a-zA-Z][a-zA-Z\d]*)\[([a-zA-Z\d]{0,})\]$/
 const outputVariableRegex = /\$([a-zA-Z]+[a-zA-Z\d]*)/g
 
 function getNewCalcData (nodes) {
-  const calcData = { scope: {}, outputs: [], memoryStates: [], parameters: {}, returnVal: {} }
+  const calcData = { scope: {}, outputs: [], memoryStates: [], returnVal: {} }
   for (const func in nodes) {
     calcData.scope[func] = {}
-    calcData.parameters[func] = {}
+    for (const otherFunc in nodes) {
+      // TODO should differentiate the scopes of recursive function calls
+      if (otherFunc === 'main') continue
+      calcData.scope[func][otherFunc] = (...args) => {
+        calcData.scope[otherFunc].params = _.cloneDeep(args)
+        const funcStartNode = _.find(nodes[otherFunc], n => { return n.type === 'start' })
+        executeFromNode(funcStartNode, nodes, otherFunc, calcData)
+        const res = _.cloneDeep(calcData.returnVal[otherFunc])
+
+        // "Consume" the return value
+        calcData.returnVal[otherFunc] = null
+
+        // Delete parameters
+        // calcData.scope[otherFunc] = []
+        return res
+      }
+    }
     calcData.returnVal[func] = null
   }
 
   return calcData
 }
-
-function isNumeric (str) {
-  if (typeof str != "string") return false
-  return !isNaN(str) &&
-         !isNaN(parseFloat(str))
-}
-
-function cleanupUserInput (token) {
-  if (['<', '>', '==', '(', ')', '+', '-', '/', '*', '=', '+=', '-='].indexOf(token) >= 0) return token
-  else if (isNumeric(token)) return token
-  else if (accessArrayRegex.test(token)) {
-    const match = accessArrayRegex.exec(token)
-    const varName = match[1]
-    const arrayAccess = match[2]
-    let arrayAccessStr = '[' + arrayAccess + ']'
-    if (!isNumeric(arrayAccess)) arrayAccessStr = '[this[' + JSON.stringify(arrayAccess) + ']]'
-    return 'this[' + JSON.stringify(varName) + ']' + arrayAccessStr
-  }
-
-  return 'this[' + JSON.stringify(token) + ']'
-}
-
 function executeFromNode (node, nodes, func, calcData) {
   if (node.type === 'end') {
     return calcData
@@ -49,8 +42,8 @@ function executeFromNode (node, nodes, func, calcData) {
     }
   } else if (node.type === 'expression') {
     for (const expr of node.expressions) {
-      const expression = booleanExpression(expr)
-      const parsedExpr = expression.toString(cleanupUserInput)
+      const parsedExpr = parseExpressions(expr)
+      // console.log('expr', parsedExpr)
 
       const result = function (str) {
         return eval(str)
@@ -58,8 +51,10 @@ function executeFromNode (node, nodes, func, calcData) {
     }
 
   } else if (node.type === 'condition') {
-    const condition = booleanExpression(node.condition)
-    const parsedCondition = condition.toString(cleanupUserInput)
+    // const condition = booleanExpression(node.condition)
+    // const parsedCondition = condition.toString(cleanupUserInput)
+    const parsedCondition = parseExpressions(node.condition)
+    // console.log('cond', parsedCondition)
 
     const result = function (str) {
       return eval(str)
@@ -84,34 +79,6 @@ function executeFromNode (node, nodes, func, calcData) {
       outputStr = outputStr.replaceAll(keyVar, matchedVariables[keyVar])
     }
     calcData.outputs.push({ func, str: outputStr })
-  } else if (node.type === 'functionCall') {
-    const functionName = node.functionName
-    const assignReturnValTo = node.assignReturnValTo
-    const parameters = node.functionParameters
-
-    if (parameters.length > 0) {
-      const newParameters = []
-      for (const parameter of parameters) {
-        newParameters.push(parameter.value)
-      }
-      calcData.parameters[functionName] = newParameters
-    }
-
-    const funcStartNode = _.find(nodes[functionName], n => { return n.type === 'start' })
-    // TODO pass parameters
-    executeFromNode(funcStartNode, nodes, functionName, calcData)
-
-    if (assignReturnValTo !== '') {
-      // TODO handle missing variable
-      calcData.scope[func][assignReturnValTo] = calcData.returnVal[functionName]
-    }
-
-    if (!_.isNil(calcData.returnVal[functionName])) {
-      // "Consume" the return value
-      calcData.returnVal[functionName] = null
-      // Delete parameters
-      calcData.parameters[functionName] = []
-    }
   } else if (node.type === 'returnValue') {
     const returnType = node.returnType
     let returnValue = node.returnValue
@@ -120,11 +87,7 @@ function executeFromNode (node, nodes, func, calcData) {
       returnValue = _.cloneDeep(calcData.scope[func][returnValue])
     }
     calcData.returnVal[func] = returnValue
-  } else if (node.type === 'readParameters') {
-    for (const variable of node.variables) {
-      // TODO handle missing parameter
-      calcData.scope[func][variable.name] = calcData.parameters[func][variable.value]
-    }
+    // console.log('set return value to', calcData.returnVal[func], JSON.stringify(calcData.scope[func]))
   }
 
   const memoryStateSnapshot = {
