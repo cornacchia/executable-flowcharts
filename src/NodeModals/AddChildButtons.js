@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import ButtonGroup from 'react-bootstrap/ButtonGroup'
 import Button from 'react-bootstrap/Button'
-import { Clipboard, Calculator, SignpostSplit, Printer, CaretRightSquare, BoxArrowDown, BoxArrowUp } from 'react-bootstrap-icons'
+import { Calculator, SignpostSplit, Printer, ArrowRepeat, BoxArrowUp } from 'react-bootstrap-icons'
 
 class AddChildButtons extends React.Component {
   constructor (props) {
@@ -14,14 +14,14 @@ class AddChildButtons extends React.Component {
   render () {
     return (
       <ButtonGroup>
-        <Button variant='dark' onClick={() => {this.props.addChildCallback('variable', this.props.node, this.props.branch)}}>
-          Variabili <Clipboard />
-        </Button>
-        <Button variant='secondary' onClick={() => {this.props.addChildCallback('expression', this.props.node, this.props.branch)}}>
+        <Button variant='dark' onClick={() => {this.props.addChildCallback('expression', this.props.node, this.props.branch)}}>
           Espressione <Calculator />
         </Button>
-        <Button variant='dark' onClick={() => {this.props.addChildCallback('condition', this.props.node, this.props.branch)}}>
+        <Button variant='secondary' onClick={() => {this.props.addChildCallback('condition', this.props.node, this.props.branch)}}>
           Condizione <SignpostSplit />
+        </Button>
+        <Button variant='dark' onClick={() => {this.props.addChildCallback('loop', this.props.node, this.props.branch)}}>
+          Ciclo <ArrowRepeat />
         </Button>
         <Button variant='secondary' onClick={() => {this.props.addChildCallback('output', this.props.node, this.props.branch)}}>
           Output <Printer />

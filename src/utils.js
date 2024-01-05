@@ -19,9 +19,9 @@ function getNodeConnections (nodes, nodeId) {
   const connections = []
   for (const node of nodes) {
     if (!_.isNil(nodeId) && nodeId === node.id) continue
-    if (node.type === 'end') continue
+    if (node.nodeType === 'end') continue
 
-    if (node.type === 'condition') {
+    if (node.nodeType === 'condition') {
       connections.push({
         value: node.id + '/yes'
       })

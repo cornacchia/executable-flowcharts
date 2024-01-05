@@ -6,7 +6,6 @@ import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
 import { Trash } from 'react-bootstrap-icons'
-import SelectParents from './SelectParents'
 import AddChildButtons from './AddChildButtons'
 
 const _ = require('lodash')
@@ -187,15 +186,6 @@ class ExpressionModal extends React.Component {
             </Col>
           </Row>
 
-          <hr />
-
-          <Row>
-            <Col xs={12}>
-              {!_.isNil(this.state.selectedParents) &&
-                <SelectParents node={this.props.node} nodes={this.props.nodes} selectedParents={this.state.selectedParents} disabledParents={this.state.disabledParents} selectCallback={this.selectParents}/>
-              }
-            </Col>
-          </Row>
         </Modal.Body>
 
         <Modal.Footer>

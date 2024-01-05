@@ -5,6 +5,9 @@ const OPTIONS = {
       'font-weight': 'bold',
       'font-size': 16,
       fill: 'green'
+    },
+    nop: {
+      fill: 'black'
     }
   }
 }

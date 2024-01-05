@@ -9,14 +9,11 @@ import Form from 'react-bootstrap/Form'
 import { ExclamationTriangle, Play, Diagram2 } from 'react-bootstrap-icons'
 import FlowChart from 'flowchart.js'
 import StartModal from './NodeModals/StartModal'
-import VariableModal from './NodeModals/VariableModal'
 import ExpressionModal from './NodeModals/ExpressionModal'
 import ConditionModal from './NodeModals/ConditionModal'
+import LoopModal from './NodeModals/LoopModal'
 import OutputModal from './NodeModals/OutputModal'
-import FunctionCallModal from './NodeModals/FunctionCallModal'
 import ReturnValueModal from './NodeModals/ReturnValueModal'
-import ReadParameterModal from './NodeModals/ReadParameterModal'
-import AddChildButtons from './NodeModals/AddChildButtons'
 
 const _ = require('lodash')
 const nodesUtils = require('./nodes')
@@ -52,20 +49,18 @@ class Flow extends React.Component {
     this.addNode = this.addNode.bind(this)
     this.updateNode = this.updateNode.bind(this)
     this.deleteNode = this.deleteNode.bind(this)
-    this.addVariableNode = this.addVariableNode.bind(this)
     this.addExpressionNode = this.addExpressionNode.bind(this)
     this.addConditionNode = this.addConditionNode.bind(this)
+    this.addLoopNode = this.addLoopNode.bind(this)
     this.addOutputNode = this.addOutputNode.bind(this)
     this.addFunction = this.addFunction.bind(this)
     this.addReturnValueNode = this.addReturnValueNode.bind(this)
-    this.addReadParametersNode = this.addReadParametersNode.bind(this)
     this.shouldShowStartModal = this.shouldShowStartModal.bind(this)
-    this.shouldShowVariableModal = this.shouldShowVariableModal.bind(this)
     this.shouldShowExpressionModal = this.shouldShowExpressionModal.bind(this)
+    this.shouldShowConditionModal = this.shouldShowConditionModal.bind(this)
+    this.shouldShowLoopModal = this.shouldShowLoopModal.bind(this)
     this.shouldShowOutputModal = this.shouldShowOutputModal.bind(this)
-    this.shouldShowFunctionCallModal = this.shouldShowFunctionCallModal.bind(this)
     this.shouldShowReturnValueModal = this.shouldShowReturnValueModal.bind(this)
-    this.shouldShowReadParametersModal = this.shouldShowReadParametersModal.bind(this)
     this.showExecutionFeedback = this.showExecutionFeedback.bind(this)
     this.setupFunctionBaseNodes = this.setupFunctionBaseNodes.bind(this)
     this.selectFunctionTab = this.selectFunctionTab.bind(this)
@@ -88,8 +83,8 @@ class Flow extends React.Component {
   }
 
   setupFunctionBaseNodes (func) {
-    const startNode = nodesUtils.getNewNode('start')
-    const endNode = nodesUtils.getNewNode('end')
+    const startNode = nodesUtils.getNewNode('start')[0]
+    const endNode = nodesUtils.getNewNode('end')[0]
 
     const stateNodes = this.state.nodes
     stateNodes[func].push(startNode)
@@ -138,7 +133,8 @@ class Flow extends React.Component {
     for (const func in this.state.nodes) {
       const funcStr = nodesUtils.convertToDiagramStr(this.state.nodes[func])
       diagramStr[func] = funcStr
-      // console.log(func, diagramStr[func])
+      console.log('########', func)
+      console.log(diagramStr[func])
     }
 
 
@@ -233,27 +229,17 @@ class Flow extends React.Component {
     return done()
   }
 
-  addVariableNode (data) {
-    const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
-    const newVariableNode = nodesUtils.getNewNode('variable', data)
-
-    for (const parentInfo of data.parents) {
-      const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
-      nodesUtils.connectNodes(newNodeParent, parentInfo.branch, newVariableNode, selectedFuncNodes)
-    }
-
-    selectedFuncNodes.push(newVariableNode)
-
-    this.renderDiagram()
-  }
-
   addExpressionNode (data) {
     const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
-    const newExpressionNode = nodesUtils.getNewNode('expression', data)
+    const newExpressionNode = nodesUtils.getNewNode('expression', data)[0]
 
     for (const parentInfo of data.parents) {
       const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
-      nodesUtils.connectNodes(newNodeParent, parentInfo.branch, newExpressionNode, selectedFuncNodes)
+      const newSubGraph = {
+        entry: newExpressionNode,
+        exit: newExpressionNode
+      }
+      nodesUtils.connectGraphs(newNodeParent, parentInfo.branch, newSubGraph, selectedFuncNodes)
     }
 
     selectedFuncNodes.push(newExpressionNode)
@@ -263,28 +249,82 @@ class Flow extends React.Component {
 
   addConditionNode (data) {
     const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
-    const newConditionNode = nodesUtils.getNewNode('condition', data)
+    const newConditionNodes = nodesUtils.getNewNode('condition', data)
+
+    const conditionNode = newConditionNodes[0]
+    const closeConditionNode = newConditionNodes[1]
 
     for (const parentInfo of data.parents) {
       const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
-      nodesUtils.connectNodes(newNodeParent, parentInfo.branch, newConditionNode, selectedFuncNodes)
+      const newSubGraph = {
+        entry: conditionNode,
+        exit: closeConditionNode
+      }
+      nodesUtils.connectGraphs(newNodeParent, parentInfo.branch, newSubGraph, selectedFuncNodes)
     }
 
-    selectedFuncNodes.push(newConditionNode)
+    selectedFuncNodes.push(conditionNode)
+    selectedFuncNodes.push(closeConditionNode)
+
+    this.renderDiagram()
+  }
+
+  addLoopNode (data) {
+    const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
+    const newLoopNodes = nodesUtils.getNewNode('loop', data)
+
+    const conditionNode = newLoopNodes[0]
+    const loopRestartNode = newLoopNodes[1]
+    const loopEndNode = newLoopNodes[2]
+
+    for (const parentInfo of data.parents) {
+      const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
+      const newSubGraph = {
+        entry: conditionNode,
+        exit: loopEndNode
+      }
+      nodesUtils.connectGraphs(newNodeParent, parentInfo.branch, newSubGraph, selectedFuncNodes)
+    }
+
+    selectedFuncNodes.push(conditionNode)
+    selectedFuncNodes.push(loopRestartNode)
+    selectedFuncNodes.push(loopEndNode)
 
     this.renderDiagram()
   }
 
   addOutputNode (data) {
     const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
-    const newOutputNode = nodesUtils.getNewNode('output', data)
+    const newOutputNode = nodesUtils.getNewNode('output', data)[0]
 
     for (const parentInfo of data.parents) {
       const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
-      nodesUtils.connectNodes(newNodeParent, parentInfo.branch, newOutputNode, selectedFuncNodes)
+      const newSubGraph = {
+        entry: newOutputNode,
+        exit: newOutputNode
+      }
+      nodesUtils.connectGraphs(newNodeParent, parentInfo.branch, newSubGraph, selectedFuncNodes)
     }
 
     selectedFuncNodes.push(newOutputNode)
+
+    this.renderDiagram()
+  }
+
+  addReturnValueNode (data) {
+    const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
+    const newReturnValueNode = nodesUtils.getNewNode('returnValue', data)[0]
+
+    for (const parentInfo of data.parents) {
+      const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
+      const newSubGraph = {
+        entry: newReturnValueNode,
+        exit: newReturnValueNode
+      }
+      nodesUtils.connectGraphs(newNodeParent, parentInfo.branch, newSubGraph, selectedFuncNodes)
+    }
+
+    selectedFuncNodes.push(newReturnValueNode)
 
     this.renderDiagram()
   }
@@ -303,43 +343,9 @@ class Flow extends React.Component {
     }
   }
 
-  addReturnValueNode (data) {
-    const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
-    const newReturnValueNode = nodesUtils.getNewNode('returnValue', data)
-
-    for (const parentInfo of data.parents) {
-      const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
-      nodesUtils.connectNodes(newNodeParent, parentInfo.branch, newReturnValueNode, selectedFuncNodes)
-    }
-
-    selectedFuncNodes.push(newReturnValueNode)
-
-    this.renderDiagram()
-  }
-
-  addReadParametersNode (data) {
-    const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
-    const newReadParametersNode = nodesUtils.getNewNode('readParameters', data)
-
-    for (const parentInfo of data.parents) {
-      const newNodeParent = _.find(selectedFuncNodes, { id: parentInfo.id })
-      nodesUtils.connectNodes(newNodeParent, parentInfo.branch, newReadParametersNode, selectedFuncNodes)
-    }
-
-    selectedFuncNodes.push(newReadParametersNode)
-
-    this.renderDiagram()
-  }
-
   shouldShowStartModal () {
     return !_.isNil(this.state.selectedNodeObj) &&
       this.state.selectedNodeObj.type === 'start'
-  }
-
-  shouldShowVariableModal () {
-    return (!_.isNil(this.state.selectedNodeObj) &&
-    this.state.selectedNodeObj.type === 'variable') ||
-    (this.state.newNodeType === 'variable')
   }
 
   shouldShowExpressionModal () {
@@ -354,28 +360,22 @@ class Flow extends React.Component {
     (this.state.newNodeType === 'condition')
   }
 
+  shouldShowLoopModal () {
+    return (!_.isNil(this.state.selectedNodeObj) &&
+    this.state.selectedNodeObj.type === 'loop') ||
+    (this.state.newNodeType === 'loop')
+  }
+
   shouldShowOutputModal () {
     return (!_.isNil(this.state.selectedNodeObj) &&
     this.state.selectedNodeObj.type === 'output') ||
     (this.state.newNodeType === 'output')
   }
 
-  shouldShowFunctionCallModal () {
-    return (!_.isNil(this.state.selectedNodeObj) &&
-    this.state.selectedNodeObj.type === 'functionCall') ||
-    (this.state.newNodeType === 'functionCall')
-  }
-
   shouldShowReturnValueModal () {
     return (!_.isNil(this.state.selectedNodeObj) &&
     this.state.selectedNodeObj.type === 'returnValue') ||
     (this.state.newNodeType === 'returnValue')
-  }
-
-  shouldShowReadParametersModal () {
-    return (!_.isNil(this.state.selectedNodeObj) &&
-    this.state.selectedNodeObj.type === 'readParameters') ||
-    (this.state.newNodeType === 'readParameters')
   }
 
   render () {
@@ -404,10 +404,6 @@ class Flow extends React.Component {
             </Button>
           </Col>
         </Row>
-        <Row>
-          <h3>Aggiungi nodo</h3>
-          <AddChildButtons addChildCallback={this.addNode} node={null} branch='main' />
-        </Row>
         <hr />
         <Tabs activeKey={this.state.selectedFunc} onSelect={this.selectFunctionTab}>
         {_.keys(this.state.nodes).map((func, idx) => {
@@ -422,7 +418,7 @@ class Flow extends React.Component {
                 <Col xs={2}>
                   <h3>Nodi</h3>
                   <ListGroup>
-                    {this.state.nodes[func].map((node, idx) => {
+                    {_.filter(this.state.nodes[func], n => { return n.id < 10000 }).map((node, idx) => {
                       return (
                         <ListGroup.Item key={idx} onClick={() => { this.selectNode({ key: node.id }) }} active={!_.isNil(this.state.selectedNodeObj) && this.state.selectedNodeObj.id === node.id}>
                           {node.nodeType !== 'start' && node.parents.length === 0 && <ExclamationTriangle />}
@@ -465,7 +461,7 @@ class Flow extends React.Component {
           {this.state.memoryStates.map((state, idx) => {
             return (
               <Col className='memoryStateElement' xs={2} key={idx}>
-                <strong><Diagram2 />&nbsp;{state.id} ({state.func})</strong>
+                <strong><Diagram2 />&nbsp;{state.id} - {state.type} ({state.func})</strong>
                 <div dangerouslySetInnerHTML={{ __html: utils.translateMemoryStateToHtml(state) }}></div>
               </Col>
             )
@@ -478,19 +474,6 @@ class Flow extends React.Component {
             show={this.shouldShowStartModal()}
             closeCallback={this.unselectNode}
             addChildCallback={this.addNode}
-          />
-        }
-
-        {this.shouldShowVariableModal() &&
-          <VariableModal
-            node={this.state.selectedNodeObj}
-            nodes={this.state.nodes[this.state.selectedFunc]}
-            parents={this.state.selectedNodeParents}
-            show={this.shouldShowVariableModal()}
-            closeCallback={this.unselectNode}
-            addChildCallback={this.addNode}
-            addNewNodeCallback={this.addVariableNode}
-            updateNodeCallback={this.updateNode}
           />
         }
 
@@ -520,6 +503,19 @@ class Flow extends React.Component {
           />
         }
 
+        {this.shouldShowLoopModal() &&
+          <LoopModal
+            node={this.state.selectedNodeObj}
+            nodes={this.state.nodes[this.state.selectedFunc]}
+            parents={this.state.selectedNodeParents}
+            show={this.shouldShowLoopModal()}
+            closeCallback={this.unselectNode}
+            addChildCallback={this.addNode}
+            addNewNodeCallback={this.addLoopNode}
+            updateNodeCallback={this.updateNode}
+          />
+        }
+
         {this.shouldShowOutputModal() &&
           <OutputModal
             node={this.state.selectedNodeObj}
@@ -533,19 +529,6 @@ class Flow extends React.Component {
           />
         }
 
-        {this.shouldShowFunctionCallModal() &&
-          <FunctionCallModal
-            node={this.state.selectedNodeObj}
-            nodes={this.state.nodes[this.state.selectedFunc]}
-            parents={this.state.selectedNodeParents}
-            show={this.shouldShowFunctionCallModal()}
-            closeCallback={this.unselectNode}
-            addChildCallback={this.addNode}
-            addNewNodeCallback={this.addFunction}
-            updateNodeCallback={this.updateNode}
-          />
-        }
-
         {this.shouldShowReturnValueModal() &&
           <ReturnValueModal
             node={this.state.selectedNodeObj}
@@ -555,19 +538,6 @@ class Flow extends React.Component {
             closeCallback={this.unselectNode}
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addReturnValueNode}
-            updateNodeCallback={this.updateNode}
-          />
-        }
-
-        {this.shouldShowReadParametersModal() &&
-          <ReadParameterModal
-            node={this.state.selectedNodeObj}
-            nodes={this.state.nodes[this.state.selectedFunc]}
-            parents={this.state.selectedNodeParents}
-            show={this.shouldShowReadParametersModal()}
-            closeCallback={this.unselectNode}
-            addChildCallback={this.addNode}
-            addNewNodeCallback={this.addReadParametersNode}
             updateNodeCallback={this.updateNode}
           />
         }

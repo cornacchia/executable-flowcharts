@@ -5,7 +5,6 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
 import Form from 'react-bootstrap/Form'
-import SelectParents from './SelectParents'
 import AddChildButtons from './AddChildButtons'
 
 const _ = require('lodash')
@@ -131,13 +130,6 @@ class ConditionModal extends React.Component {
             </Col>
           </Row>
 
-          <Row>
-            <Col xs={12}>
-              {!_.isNil(this.state.selectedParents) &&
-                <SelectParents node={this.props.node} nodes={this.props.nodes} selectedParents={this.state.selectedParents} disabledParents={this.state.disabledParents} selectCallback={this.selectParents}/>
-              }
-            </Col>
-          </Row>
         </Modal.Body>
 
         <Modal.Footer>

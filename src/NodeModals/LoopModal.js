@@ -16,19 +16,19 @@ const baseState = {
   disabledParents: null,
   currentlySelectedParents: [],
 
-  // Output
-  output: '',
+  // Condition
+  condition: '',
   okToAddNode: false
 }
 
-class OutputModal extends React.Component {
+class LoopModal extends React.Component {
   constructor (props) {
     super(props)
 
     this.state = _.cloneDeep(baseState)
 
     this.resetState = this.resetState.bind(this)
-    this.updateOutput = this.updateOutput.bind(this)
+    this.updateCondition = this.updateCondition.bind(this)
     this.validate = this.validate.bind(this)
     this.selectParents = this.selectParents.bind(this)
     this.addNode = this.addNode.bind(this)
@@ -52,26 +52,26 @@ class OutputModal extends React.Component {
     // Parent nodes
     utils.assignParentsOnReset(newState, this.props.node, this.props.nodes, this.props.parents)
 
-    let output = ''
+    let condition = ''
     if (!_.isNil(this.props.node)) {
-      output = this.props.node.output
+      condition = this.props.node.condition
     }
 
-    newState.output = output
+    newState.condition = condition
 
     this.setState(newState)
   }
 
-  updateOutput (ev) {
+  updateCondition (ev) {
     this.setState({
-      output: ev.target.value
+      condition: ev.target.value
     }, this.validate)
   }
 
   validate () {
     let okToGo = true
-    // TODO should parse and validate output here probably
-    if (this.state.output === '') okToGo = false
+    // TODO should parse and validate condition here probably
+    if (this.state.condition === '') okToGo = false
 
     this.setState({
       okToAddNode: okToGo
@@ -85,7 +85,7 @@ class OutputModal extends React.Component {
   addNode () {
     const data = {
       parents: _.clone(this.state.currentlySelectedParents),
-      output: _.cloneDeep(this.state.output)
+      condition: _.cloneDeep(this.state.condition)
     }
 
     this.props.addNewNodeCallback(data)
@@ -97,11 +97,10 @@ class OutputModal extends React.Component {
     const data = {
       id: this.props.node.id,
       parents: _.clone(this.state.currentlySelectedParents),
-      output: _.cloneDeep(this.state.output)
+      condition: _.cloneDeep(this.state.condition)
     }
 
     this.props.updateNodeCallback(data, this.props.closeCallback)
-    // this.props.closeCallback()
   }
 
   render () {
@@ -116,7 +115,7 @@ class OutputModal extends React.Component {
             }
             {_.isNil(this.props.node) &&
               <span>
-                Nuovo nodo (output)
+                Nuovo nodo (loop)
               </span>
             }
           </Modal.Title>
@@ -124,12 +123,9 @@ class OutputModal extends React.Component {
 
         <Modal.Body>
           <Row>
-            <h3>Output:</h3>
+            <h3>Condizione:</h3>
             <Col xs={12}>
-              <Form.Control onChange={this.updateOutput} value={this.state.output} />
-              <Form.Text muted>
-                Per stampare il valore di una variabile scrivere il nome della variabile preceduto da <strong>$</strong>, ad esempio: <strong>$n</strong>
-              </Form.Text>
+              <Form.Control onChange={this.updateCondition} value={this.state.condition} />
             </Col>
           </Row>
 
@@ -138,8 +134,10 @@ class OutputModal extends React.Component {
         <Modal.Footer>
           {!_.isNil(this.props.node) &&
             <div>
-              <h3>Aggiungi successori:</h3>
-              <AddChildButtons node={this.props.node} addChildCallback={this.props.addChildCallback} branch='main' />
+              <h3>Aggiungi successori (Ramo <strong>Yes</strong>):</h3>
+              <AddChildButtons node={this.props.node} addChildCallback={this.props.addChildCallback} branch='yes' />
+              <h3>Aggiungi successori (Ramo <strong>No</strong>):</h3>
+              <AddChildButtons node={this.props.node} addChildCallback={this.props.addChildCallback} branch='no' />
             </div>
           }
 
@@ -154,13 +152,14 @@ class OutputModal extends React.Component {
               Aggiungi nodo
             </Button>
           }
+
         </Modal.Footer>
       </Modal>
     )
   }
 }
 
-OutputModal.propTypes = {
+LoopModal.propTypes = {
   show: PropTypes.bool,
   closeCallback: PropTypes.func,
   node: PropTypes.object,
@@ -171,4 +170,4 @@ OutputModal.propTypes = {
   updateNodeCallback: PropTypes.func
 }
 
-export default OutputModal
+export default LoopModal

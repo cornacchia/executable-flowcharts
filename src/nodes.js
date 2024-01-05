@@ -2,6 +2,7 @@ const _ = require('lodash')
 const utils = require('./utils')
 
 let ID = 0
+let NOP_ID = 10000
 
 const NODES = {
   start: {
@@ -23,6 +24,14 @@ const NODES = {
   condition: {
     type: 'condition',
     nodeType: 'condition'
+  },
+  loop: {
+    type: 'loop',
+    nodeType: 'condition'
+  },
+  nop: {
+    type: 'nop',
+    nodeType: 'operation'
   },
   output: {
     type: 'output',
@@ -73,6 +82,8 @@ function getNodeText (type, data) {
     }
   } else if (type === 'condition') {
     newNodeText += cleanupExpression(data.condition)
+  } else if (type === 'loop') {
+    newNodeText += cleanupExpression(data.condition)
   } else if (type === 'output') {
     newNodeText += 'output "' + data.output + '"'
   } else if (type === 'functionCall') {
@@ -105,22 +116,68 @@ function getNodeHtml (type, data) {
   return nodeHtml
 }
 
-function getNewNode (type, data) {
-  if (!NODES[type]) console.error('Not implemented!')
-
+function createNewNode (type) {
   const newNode = _.cloneDeep(NODES[type])
   newNode.id = ++ID
   newNode.parents = []
   newNode.children = { main: -1 }
   newNode.selected = false
 
+  return newNode
+}
+
+function getNopNode (parent) {
+  const newNode = _.cloneDeep(NODES.nop)
+  newNode.id = ++NOP_ID
+  newNode.nopFor = parent.id
+  newNode.parents = []
+  newNode.children = { main: -1 }
+  newNode.selected = false
+
+  return newNode
+}
+
+function getNewNode (type, data) {
+  if (!NODES[type]) console.error('Not implemented!')
+
+  const newNode = createNewNode(type)
+  const result = [ newNode ]
+
   if (type === 'variable') {
     newNode.variables = _.cloneDeep(data.variables)
   } else if (type === 'expression') {
     newNode.expressions = data.expressions
   } else if (type === 'condition') {
+    const closeConditionNode = getNopNode(newNode)
+    closeConditionNode.parents.push({ id: newNode.id, branch: 'yes' })
+    closeConditionNode.parents.push({ id: newNode.id, branch: 'no' })
+    newNode.children = {
+      yes: closeConditionNode.id,
+      no: closeConditionNode.id,
+      main: -1
+    }
+
     newNode.condition = data.condition
-    newNode.children = { yes: -1, no: -1, main: -1 }
+
+
+    result.push(closeConditionNode)
+  } else if (type === 'loop') {
+    const loopRestartNode = getNopNode(newNode)
+    const loopEndNode = getNopNode(newNode)
+    loopRestartNode.parents.push({ id: newNode.id, branch: 'yes' })
+    loopRestartNode.children.main = newNode.id
+
+    loopEndNode.parents.push({ id: newNode.id, branch: 'no' })
+
+    newNode.children = {
+      yes: loopRestartNode.id,
+      no: loopEndNode.id,
+      main: -1
+    }
+
+    newNode.condition = data.condition
+    result.push(loopRestartNode)
+    result.push(loopEndNode)
   } else if (type === 'output') {
     newNode.output = data.output
   } else if (type === 'functionCall') {
@@ -134,7 +191,7 @@ function getNewNode (type, data) {
     newNode.variables = _.cloneDeep(data.variables)
   }
 
-  return newNode
+  return result
 }
 
 function updateNodeContents (nodeObj, data) {
@@ -160,27 +217,96 @@ function updateNodeContents (nodeObj, data) {
   return nodeObj
 }
 
-function connectNodes (parent, branch, child, nodes) {
-  // console.log('connect', parent.id, child.id, branch)
+function hasChildren (node) {
+  if (node.nodeType !== 'condition' && node.children.main >= 0) return true
+  if (node.nodeType === 'condition' && node.children.yes >= 0) return true
+  if (node.nodeType === 'condition' && node.children.no >= 0) return true
+  return false
+}
 
-  // Check if parent and child already connected
+function connectGraphs (parent, branch, childGraph, nodes) {
+  // >>> Handle previous child, part 1
+  // Check if parent had previous child on the same branch
+  // Remove that child from the parent's successors but keep it in order to attach it
+  // to child graph exit point
+  let previousChild = null
+  if (parent.children[branch] >= 0) {
+    previousChild = _.find(nodes, { id: parent.children[branch] })
+    // Remove parent from previous child's parents
+    _.remove(previousChild.parents, { id: parent.id })
+  }
+  // Remove previous child from parent's children
+  parent.children[branch] = -1
+
+  // # Previous child disconnected from parent
+
+  // >>> Handle child graph entry point connection to parent
+  // Add new parent to child graph entry point
+  childGraph.entry.parents.push({ id: parent.id, branch: branch })
+  // Add new child to new parent
+  parent.children[branch] = childGraph.entry.id
+
+  // # Connection to entry point done
+
+  // >>> Handle previous child, part 2
+  if (!_.isNil(previousChild)) {
+    // NOTE: child graphs exit points are always "operation" nodes
+    // that can only have children on branch "main"
+
+    // Add previous child as children to child graph exit point
+    childGraph.exit.children.main = previousChild.id
+    previousChild.parents.push({ id: childGraph.exit.id, branch: 'main' })
+
+    // # Connection o exit point done, previous child handled
+  }
+}
+
+function connectNodes (parent, branch, child, nodes) {
+  // Check if parent and child are already connected -> in that case do nothing
   if (parent.children[branch] === child.id) {
-    // console.log('!!! Already connected')
     return
   }
 
   // Check if parent had previous child on the same branch
   let previousChild = null
-  if (parent.children[branch] >= 0) previousChild = _.find(nodes, { id: parent.children[branch] })
+  if (parent.children[branch] >= 0) {
+    previousChild = _.find(nodes, { id: parent.children[branch] })
+    // Remove parent from previous child's parents
+  _.remove(previousChild.parents, { id: parent.id })
+  }
+  // Remove previous child from parent's children
+  parent.children[branch] = -1
 
-  // Actually connect parent with new child
-  parent.children[branch] = child.id
-
-  // Remove previous parent on the branch, if present
+  const childPreviousParents = _.cloneDeep(child.parents)
+  // Remove previous parent (same branch) from new child, if present
   _.remove(child.parents, { branch: branch })
-  // Add new parent
+  // Add new parent to new child
   child.parents.push({ id: parent.id, branch: branch })
 
+  // Add new child to new parent
+  parent.children[branch] = child.id
+
+
+  if (!_.isNil(previousChild)) {
+    if (!hasChildren(child)) {
+      // If new child has no children then we can attach any previous child
+      // to its "main", "yes" and "no" branches
+      if (child.nodeType !== 'condition') {
+        connectNodes(child, 'main', previousChild, nodes)
+      } else {
+        // TO VERIFY, probably best to directly connect both branches
+        connectNodes(child, 'yes', previousChild, nodes)
+        connectNodes(child, 'no', previousChild, nodes)
+      }
+    } else {
+      // New child has children of its own
+
+    }
+  } else {
+    // Parent node has no children, this should never happen
+  }
+
+  /*
   if (!_.isNil(previousChild)) {
     // console.log('!!! There is a previous child')
     if (child.nodeType !== 'condition') connectNodes(child, 'main', previousChild, nodes)
@@ -193,6 +319,7 @@ function connectNodes (parent, branch, child, nodes) {
     if (child.nodeType !== 'condition') connectNodes(child, 'main', endNode, nodes)
     else connectNodes(child, 'yes', endNode, nodes)
   }
+  */
 }
 
 function severChildConnection (nodeObj, branch, nodes) {
@@ -204,10 +331,14 @@ function severChildConnection (nodeObj, branch, nodes) {
 
 function convertToNodeLine (node) {
   let nodeStr = node.id + '=>'
-  nodeStr += node.nodeType
-  nodeStr += ': ' + node.id + ') \n' + getNodeText(node.type, node)
-  if (node.selected) nodeStr += '|selected'
-  nodeStr += ':$nodeClickCallback'
+  nodeStr += node.nodeType + ': '
+  if (node.type !== 'nop') {
+    if (node.type !== 'nop') nodeStr += node.id + ') \n' + getNodeText(node.type, node)
+    if (node.selected) nodeStr += '|selected'
+    nodeStr += ':$nodeClickCallback'
+  } else {
+    nodeStr += ' |nop'
+  }
 
   nodeStr += '\n'
   return nodeStr
@@ -228,17 +359,15 @@ function isAncestorOrSame (origin, node, nodes, visited) {
 }
 
 function convertToConnLine (node, nodes) {
-  // If going "forward" direction should be "bottom"
-  // if going "backward" direction should be "right"
   let connStr = ''
   for (const key in node.children) {
     if (_.isNil(node.children[key]) || node.children[key] < 0) continue
     connStr += node.id
-    connStr += '('
-    if (key !== 'main') connStr += key + ','
-    if (key === 'no' || isAncestorOrSame(node.id, node.children[key], nodes, [])) connStr += 'right'
-    else connStr += 'bottom'
-    connStr += ')'
+    if (key !== 'main') connStr += '('
+    if (key !== 'main') connStr += key
+    // if (key === 'no' || isAncestorOrSame(node.id, node.children[key], nodes, [])) connStr += 'right'
+    // else connStr += 'bottom'
+    if (key !== 'main')  connStr += ')'
     connStr += '->'
     connStr += node.children[key]
     connStr += '\n'
@@ -268,11 +397,12 @@ function initialize (reactThis) {
 }
 
 function updateNode (data, allNodes) {
-  // console.log('Updating node', data.id)
   let nodeObj = _.find(allNodes, { id: data.id })
-  // console.log('Update node contents', data.id)
+
+  // Update node contents
   nodeObj = updateNodeContents(nodeObj, data)
 
+  // Handle changing parents
   const previousParentsObjs = _.filter(allNodes, n => { return !_.isNil(_.find(nodeObj.parents, { id: n.id })) })
   const mainChild = _.find(allNodes, { id: nodeObj.children.main })
   const yesChild = _.find(allNodes, { id: nodeObj.children.yes })
@@ -280,16 +410,14 @@ function updateNode (data, allNodes) {
 
   const newParents = _.filter(allNodes, n => { return !_.isNil(_.find(data.parents, { id: n.id })) })
 
-  // If new parents are the same as before -> do nothing
   if (utils.checkIfSameParents(previousParentsObjs, newParents)) {
-    // console.log('Same parents, just re render')
+    // If new parents are the same as before -> do nothing
   } else if (utils.checkIfOnlyAddingParents(previousParentsObjs, newParents)) {
-    // console.log('Just adding a new parent to the list')
+    // If we are only adding new parents -> just add them to the list
     for (const parent of data.parents) {
       const newParentObj = _.find(allNodes, n => { return n.id === parent.id })
-      // Only connect new parents
+      // Connect parents that were not previously connected
       if (_.isNil(_.find(previousParentsObjs, p => { return p.id === newParentObj.id}))) {
-        // console.log('>> Add', newParentObj.id, 'as parent to', nodeObj.id)
         connectNodes(newParentObj, parent.branch, nodeObj, allNodes)
       }
     }
@@ -339,6 +467,7 @@ module.exports = {
   initialize,
   getNewNode,
   connectNodes,
+  connectGraphs,
   convertToDiagramStr,
   updateNodeContents,
   severChildConnection,

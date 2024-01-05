@@ -30,11 +30,10 @@ function getNewCalcData (nodes) {
   return calcData
 }
 function executeFromNode (node, nodes, func, calcData) {
-  if (node.type === 'end') {
-    return calcData
+  let nextNode
+  if (node.type !== 'end') {
+    nextNode = _.find(nodes[func], { id: node.children.main })
   }
-
-  let nextNode = _.find(nodes[func], { id: node.children.main })
 
   if (node.type === 'variable') {
     for (const variable of node.variables) {
@@ -50,7 +49,7 @@ function executeFromNode (node, nodes, func, calcData) {
       }.call(calcData.scope[func], parsedExpr)
     }
 
-  } else if (node.type === 'condition') {
+  } else if (node.type === 'condition' || node.type === 'loop') {
     // const condition = booleanExpression(node.condition)
     // const parsedCondition = condition.toString(cleanupUserInput)
     const parsedCondition = parseExpressions(node.condition)
@@ -90,15 +89,20 @@ function executeFromNode (node, nodes, func, calcData) {
     // console.log('set return value to', calcData.returnVal[func], JSON.stringify(calcData.scope[func]))
   }
 
-  const memoryStateSnapshot = {
-    id: _.clone(node.id),
-    func: func,
-    memory: _.cloneDeep(calcData.scope)
+  if (node.type !== 'nop') {
+    const memoryStateSnapshot = {
+      id: _.clone(node.id),
+      type: _.clone(node.type),
+      func: func,
+      memory: _.cloneDeep(calcData.scope)
+    }
+  
+    calcData.memoryStates.push(memoryStateSnapshot)
   }
 
-  calcData.memoryStates.push(memoryStateSnapshot)
-
-  return executeFromNode(nextNode, nodes, func, calcData)
+  if (node.type === 'end') {
+    return calcData
+  } else return executeFromNode(nextNode, nodes, func, calcData)
 }
 
 module.exports = {
