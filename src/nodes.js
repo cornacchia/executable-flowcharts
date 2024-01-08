@@ -413,14 +413,46 @@ function updateNode (data, allNodes) {
   return allNodes
 }
 
+function findAllNodesBetween (start, end, nodes, result) {
+  if (result.indexOf(start.id) < 0) result.push(start.id)
+  else return result
+
+  if (start.id === end.id) return result
+  for (const childType of ['main', 'yes', 'no']) {
+    if (!_.isNil(start.children[childType]) && start.children[childType] >= 0) {
+      const childNode = _.find(nodes, n => { return n.id === start.children[childType] })
+      result = findAllNodesBetween(childNode, end, nodes, result)
+    }
+  }
+
+  return result
+}
+
+function deleteNode (data, allNodes) {
+  const nodesToDelete = findAllNodesBetween(data.start, data.end, allNodes, [])
+  const startParent = _.find(allNodes, n => { return n.id === data.start.parents[0].id })
+  const startParentBranch = data.start.parents[0].branch
+  const endChild = _.find(allNodes, n => { return n.id === data.end.children.main })
+  startParent.children[startParentBranch] = -1
+  _.remove(endChild.parents, n => { return n.id === data.end.id })
+
+  _.remove(allNodes, n => { return nodesToDelete.indexOf(n.id) >= 0})
+
+  const subGraph = {
+    entry: endChild,
+    exit: endChild
+  }
+  connectGraphs(startParent, startParentBranch, subGraph, allNodes)
+}
+
 module.exports = {
   initialize,
   getNewNode,
   connectNodes,
   connectGraphs,
   convertToDiagramStr,
-  updateNodeContents,
   severChildConnection,
   updateNode,
+  deleteNode,
   getNodeHtml
 }

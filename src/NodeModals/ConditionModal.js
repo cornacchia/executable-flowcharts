@@ -33,6 +33,7 @@ class ConditionModal extends React.Component {
     this.selectParents = this.selectParents.bind(this)
     this.addNode = this.addNode.bind(this)
     this.updateNode = this.updateNode.bind(this)
+    this.deleteNode = this.deleteNode.bind(this)
   }
 
   componentDidMount () {
@@ -103,6 +104,16 @@ class ConditionModal extends React.Component {
     this.props.updateNodeCallback(data, this.props.closeCallback)
   }
 
+  deleteNode () {
+    const endNode = _.find(this.props.nodes, n => { return n.nopFor === this.props.node.id })
+    const data = {
+      start: this.props.node,
+      end: endNode
+    }
+
+    this.props.deleteNodeCallback(data, this.props.closeCallback)
+  }
+
   render () {
     return (
       <Modal show={this.props.show} onHide={this.props.closeCallback} size='lg'>
@@ -152,6 +163,12 @@ class ConditionModal extends React.Component {
               Aggiungi nodo
             </Button>
           }
+
+          {!_.isNil(this.props.node) &&
+            <Button variant='danger' onClick={this.deleteNode}>
+              Elimina nodo (insieme a tutti i nodi nel suo scope)
+            </Button>
+          }
         </Modal.Footer>
       </Modal>
     )
@@ -166,7 +183,8 @@ ConditionModal.propTypes = {
   parent: PropTypes.object,
   addChildCallback: PropTypes.func,
   addNewNodeCallback: PropTypes.func,
-  updateNodeCallback: PropTypes.func
+  updateNodeCallback: PropTypes.func,
+  deleteNodeCallback: PropTypes.func
 }
 
 export default ConditionModal

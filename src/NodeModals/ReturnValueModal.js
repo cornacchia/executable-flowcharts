@@ -42,6 +42,7 @@ class ReturnValueModal extends React.Component {
     this.addNode = this.addNode.bind(this)
     this.updateNode = this.updateNode.bind(this)
     this.selectParents = this.selectParents.bind(this)
+    this.deleteNode = this.deleteNode.bind(this)
   }
 
   componentDidMount () {
@@ -128,6 +129,15 @@ class ReturnValueModal extends React.Component {
     this.setState(utils.selectParents(this.props.node, this.props.nodes, selectedParents), this.validate)
   }
 
+  deleteNode () {
+    const data = {
+      start: this.props.node,
+      end: this.props.node
+    }
+
+    this.props.deleteNodeCallback(data, this.props.closeCallback)
+  }
+
   render () {
     return (
       <Modal show={this.props.show} onHide={this.props.closeCallback} size='lg'>
@@ -204,6 +214,12 @@ class ReturnValueModal extends React.Component {
               Aggiungi nodo
             </Button>
           }
+
+          {!_.isNil(this.props.node) &&
+            <Button variant='danger' onClick={this.deleteNode}>
+              Elimina nodo
+            </Button>
+          }
         </Modal.Footer>
       </Modal>
     )
@@ -218,7 +234,8 @@ ReturnValueModal.propTypes = {
   parent: PropTypes.object,
   addChildCallback: PropTypes.func,
   addNewNodeCallback: PropTypes.func,
-  updateNodeCallback: PropTypes.func
+  updateNodeCallback: PropTypes.func,
+  deleteNodeCallback: PropTypes.func
 }
 
 export default ReturnValueModal

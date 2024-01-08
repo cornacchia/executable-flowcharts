@@ -39,6 +39,7 @@ class ExpressionModal extends React.Component {
     this.selectParents = this.selectParents.bind(this)
     this.addNode = this.addNode.bind(this)
     this.updateNode = this.updateNode.bind(this)
+    this.deleteNode = this.deleteNode.bind(this)
   }
 
   componentDidMount () {
@@ -129,7 +130,15 @@ class ExpressionModal extends React.Component {
     }
 
     this.props.updateNodeCallback(data, this.props.closeCallback)
-    // this.props.closeCallback()
+  }
+
+  deleteNode () {
+    const data = {
+      start: this.props.node,
+      end: this.props.node
+    }
+
+    this.props.deleteNodeCallback(data, this.props.closeCallback)
   }
 
   render () {
@@ -207,6 +216,12 @@ class ExpressionModal extends React.Component {
               Aggiungi nodo
             </Button>
           }
+
+          {!_.isNil(this.props.node) &&
+            <Button variant='danger' onClick={this.deleteNode}>
+              Elimina nodo
+            </Button>
+          }
         </Modal.Footer>
       </Modal>
     )
@@ -221,7 +236,8 @@ ExpressionModal.propTypes = {
   parent: PropTypes.object,
   addChildCallback: PropTypes.func,
   addNewNodeCallback: PropTypes.func,
-  updateNodeCallback: PropTypes.func
+  updateNodeCallback: PropTypes.func,
+  deleteNodeCallback: PropTypes.func
 }
 
 export default ExpressionModal

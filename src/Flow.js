@@ -211,24 +211,16 @@ class Flow extends React.Component {
     })
   }
 
-  deleteNode (nodeId) {
-    const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
-    const nodeObj = _.find(selectedFuncNodes, { id: nodeId })
-    const parentsObj = _.filter(selectedFuncNodes, n => { return nodeObj.parents.indexOf(n.id) >= 0 })
-    const childObj = _.find(selectedFuncNodes, { id: nodeObj.children.main })
-
-    _.remove(selectedFuncNodes, n => { return n.id !== nodeId })
-
-    for (const parentObj of parentsObj) {
-      nodesUtils.connectNodes(parentObj, 'main', childObj, selectedFuncNodes)
-    }
-
-    return this.renderDiagram()
-  }
-
   updateNode (data, done) {
     const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
     nodesUtils.updateNode(data, selectedFuncNodes)
+
+    return done()
+  }
+
+  deleteNode (data, done) {
+    const selectedFuncNodes = this.state.nodes[this.state.selectedFunc]
+    nodesUtils.deleteNode(data, selectedFuncNodes)
 
     return done()
   }
@@ -503,6 +495,7 @@ class Flow extends React.Component {
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addExpressionNode}
             updateNodeCallback={this.updateNode}
+            deleteNodeCallback={this.deleteNode}
           />
         }
 
@@ -516,6 +509,7 @@ class Flow extends React.Component {
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addConditionNode}
             updateNodeCallback={this.updateNode}
+            deleteNodeCallback={this.deleteNode}
           />
         }
 
@@ -529,6 +523,7 @@ class Flow extends React.Component {
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addLoopNode}
             updateNodeCallback={this.updateNode}
+            deleteNodeCallback={this.deleteNode}
           />
         }
 
@@ -542,6 +537,7 @@ class Flow extends React.Component {
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addOutputNode}
             updateNodeCallback={this.updateNode}
+            deleteNodeCallback={this.deleteNode}
           />
         }
 
@@ -555,6 +551,7 @@ class Flow extends React.Component {
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addReturnValueNode}
             updateNodeCallback={this.updateNode}
+            deleteNodeCallback={this.deleteNode}
           />
         }
 

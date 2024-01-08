@@ -33,6 +33,7 @@ class OutputModal extends React.Component {
     this.selectParents = this.selectParents.bind(this)
     this.addNode = this.addNode.bind(this)
     this.updateNode = this.updateNode.bind(this)
+    this.deleteNode = this.deleteNode.bind(this)
   }
 
   componentDidMount () {
@@ -101,7 +102,15 @@ class OutputModal extends React.Component {
     }
 
     this.props.updateNodeCallback(data, this.props.closeCallback)
-    // this.props.closeCallback()
+  }
+
+  deleteNode () {
+    const data = {
+      start: this.props.node,
+      end: this.props.node
+    }
+
+    this.props.deleteNodeCallback(data, this.props.closeCallback)
   }
 
   render () {
@@ -152,6 +161,12 @@ class OutputModal extends React.Component {
           {_.isNil(this.props.node) &&
             <Button variant='success' disabled={!this.state.okToAddNode} onClick={this.addNode}>
               Aggiungi nodo
+            </Button>
+          }
+
+          {!_.isNil(this.props.node) &&
+            <Button variant='danger' onClick={this.deleteNode}>
+              Elimina nodo
             </Button>
           }
         </Modal.Footer>
