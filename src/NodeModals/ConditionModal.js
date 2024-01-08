@@ -101,7 +101,6 @@ class ConditionModal extends React.Component {
     }
 
     this.props.updateNodeCallback(data, this.props.closeCallback)
-    // this.props.closeCallback()
   }
 
   render () {

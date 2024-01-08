@@ -205,6 +205,8 @@ function updateNodeContents (nodeObj, data) {
     nodeObj.expressions = data.expressions
   } else if (nodeObj.type === 'condition') {
     nodeObj.condition = data.condition
+  } else if (nodeObj.type === 'loop') {
+    nodeObj.condition = data.condition
   } else if (nodeObj.type === 'output') {
     nodeObj.output = data.output
   } else if (nodeObj.type === 'functionCall') {
@@ -406,66 +408,8 @@ function updateNode (data, allNodes) {
   let nodeObj = _.find(allNodes, { id: data.id })
 
   // Update node contents
-  nodeObj = updateNodeContents(nodeObj, data)
+  updateNodeContents(nodeObj, data)
 
-  // Handle changing parents
-  const previousParentsObjs = _.filter(allNodes, n => { return !_.isNil(_.find(nodeObj.parents, { id: n.id })) })
-  const mainChild = _.find(allNodes, { id: nodeObj.children.main })
-  const yesChild = _.find(allNodes, { id: nodeObj.children.yes })
-  const noChild = _.find(allNodes, { id: nodeObj.children.no })
-
-  const newParents = _.filter(allNodes, n => { return !_.isNil(_.find(data.parents, { id: n.id })) })
-
-  if (utils.checkIfSameParents(previousParentsObjs, newParents)) {
-    // If new parents are the same as before -> do nothing
-  } else if (utils.checkIfOnlyAddingParents(previousParentsObjs, newParents)) {
-    // If we are only adding new parents -> just add them to the list
-    for (const parent of data.parents) {
-      const newParentObj = _.find(allNodes, n => { return n.id === parent.id })
-      // Connect parents that were not previously connected
-      if (_.isNil(_.find(previousParentsObjs, p => { return p.id === newParentObj.id}))) {
-        connectNodes(newParentObj, parent.branch, nodeObj, allNodes)
-      }
-    }
-  } else {
-    // If either yes or no children exists, we can not know to which parent they
-    // should be assigned, so just disconnect them from the diagram for now
-    if (!_.isNil(yesChild) || !_.isNil(noChild)) {
-      if (!_.isNil(yesChild)) {
-        // console.log('Yes child, remove')
-        nodeObj.children.yes = -1
-        _.remove(yesChild.parents, p => { return p === nodeObj.id })
-      }
-      if (!_.isNil(noChild)) {
-        // console.log('No child, remove')
-        nodeObj.children.no = -1
-        _.remove(noChild.parents, p => { return p === nodeObj.id })
-      }
-    }
-
-    // console.log('Remove node from tree and tie up loose strings')
-    severChildConnection(nodeObj, 'main', allNodes)
-    // nodeObj.children.main = -1
-
-
-    const previousParents = _.cloneDeep(nodeObj.parents)
-    for (const parent of previousParents) {
-      const parentObj = _.find(previousParentsObjs, { id: parent.id })
-      // console.log('Removing from parent', parentObj.id, 'and connecting to', mainChild.id)
-      severChildConnection(parentObj, parent.branch, allNodes)
-      // parentObj.children.main = - 1
-
-      connectNodes(parentObj, parent.branch, mainChild, allNodes)
-    }
-
-    // console.log('Insert node in new place')
-    for (const newParent of data.parents) {
-      const newParentObj = _.find(newParents, { id: newParent.id })
-      connectNodes(newParentObj, newParent.branch, nodeObj, allNodes)
-    }
-  }
-
-  // console.dir(allNodes, { depth: undefined })
   return allNodes
 }
 
