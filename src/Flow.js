@@ -14,6 +14,7 @@ import ConditionModal from './NodeModals/ConditionModal'
 import LoopModal from './NodeModals/LoopModal'
 import OutputModal from './NodeModals/OutputModal'
 import ReturnValueModal from './NodeModals/ReturnValueModal'
+import FunctionCallModal from './NodeModals/FunctionCallModal'
 
 const _ = require('lodash')
 const nodesUtils = require('./nodes')
@@ -61,6 +62,7 @@ class Flow extends React.Component {
     this.shouldShowLoopModal = this.shouldShowLoopModal.bind(this)
     this.shouldShowOutputModal = this.shouldShowOutputModal.bind(this)
     this.shouldShowReturnValueModal = this.shouldShowReturnValueModal.bind(this)
+    this.shouldShowFunctionCallModal = this.shouldShowFunctionCallModal.bind(this)
     this.showExecutionFeedback = this.showExecutionFeedback.bind(this)
     this.setupFunctionBaseNodes = this.setupFunctionBaseNodes.bind(this)
     this.selectFunctionTab = this.selectFunctionTab.bind(this)
@@ -106,7 +108,7 @@ class Flow extends React.Component {
   }
 
   executeFlowchart () {
-    // console.log(JSON.stringify(this.state.nodes))
+    console.log(JSON.stringify(this.state.nodes))
 
     const startNode = _.find(this.state.nodes.main, { nodeType: 'start' })
     const res = executer.executeFromNode(startNode, this.state.nodes, 'main', executer.getNewCalcData(this.state.nodes))
@@ -133,8 +135,8 @@ class Flow extends React.Component {
     for (const func in this.state.nodes) {
       const funcStr = nodesUtils.convertToDiagramStr(this.state.nodes[func])
       diagramStr[func] = funcStr
-      console.log('########', func)
-      console.log(diagramStr[func])
+      // console.log('########', func)
+      // console.log(diagramStr[func])
     }
 
 
@@ -378,6 +380,12 @@ class Flow extends React.Component {
     (this.state.newNodeType === 'returnValue')
   }
 
+  shouldShowFunctionCallModal () {
+    return (!_.isNil(this.state.selectedNodeObj) &&
+    this.state.selectedNodeObj.type === 'functionCall') ||
+    (this.state.newNodeType === 'functionCall')
+  }
+
   render () {
     return (
       <div>
@@ -538,6 +546,19 @@ class Flow extends React.Component {
             closeCallback={this.unselectNode}
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addReturnValueNode}
+            updateNodeCallback={this.updateNode}
+          />
+        }
+
+        {this.shouldShowFunctionCallModal() &&
+          <FunctionCallModal
+            node={this.state.selectedNodeObj}
+            nodes={this.state.nodes[this.state.selectedFunc]}
+            parents={this.state.selectedNodeParents}
+            show={this.shouldShowFunctionCallModal()}
+            closeCallback={this.unselectNode}
+            addChildCallback={this.addNode}
+            addNewNodeCallback={this.addFunction}
             updateNodeCallback={this.updateNode}
           />
         }
