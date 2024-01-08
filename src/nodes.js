@@ -373,6 +373,7 @@ function convertToConnLine (node, nodes) {
     // if (key === 'no' || isAncestorOrSame(node.id, node.children[key], nodes, [])) connStr += 'right'
     // else connStr += 'bottom'
     if (key !== 'main')  connStr += ')'
+    if (node.type === 'nopNoModal') connStr += '(left)'
     connStr += '->'
     connStr += node.children[key]
     connStr += '\n'
