@@ -70,6 +70,7 @@ class Flow extends React.Component {
     this.selectFunctionTab = this.selectFunctionTab.bind(this)
     this.updateSelectedExampleProgram = this.updateSelectedExampleProgram.bind(this)
     this.loadExampleProgram = this.loadExampleProgram.bind(this)
+    this.deleteSelectedFunction = this.deleteSelectedFunction.bind(this)
   }
 
   updateSelectedExampleProgram (ev) {
@@ -106,6 +107,16 @@ class Flow extends React.Component {
   selectFunctionTab (tabKey) {
     this.setState({
       selectedFunc: tabKey
+    }, this.renderDiagram)
+  }
+
+  deleteSelectedFunction () {
+    const nodes = this.state.nodes
+    delete nodes[this.state.selectedFunc]
+
+    this.setState({
+      nodes,
+      selectedFunc: 'main'
     }, this.renderDiagram)
   }
 
@@ -405,12 +416,20 @@ class Flow extends React.Component {
           </Col>
         </Row>
         <Row>
-          <h3>Aggiungi funzione</h3>
-          <Col>
+          <Col xs={6}>
+            <h3>Aggiungi funzione</h3>
             <Button variant='primary' onClick={() => { this.addNode('functionCall') }}>
               Aggiungi
             </Button>
           </Col>
+          {this.state.selectedFunc !== 'main' &&
+            <Col xs={6}>
+              <h3>Elimina funzione</h3>
+              <Button variant='danger' onClick={this.deleteSelectedFunction}>
+                Elimina "{this.state.selectedFunc}"
+              </Button>
+            </Col>
+            }
         </Row>
         <hr />
         <Tabs activeKey={this.state.selectedFunc} onSelect={this.selectFunctionTab}>
