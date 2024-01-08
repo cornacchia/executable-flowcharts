@@ -18,8 +18,8 @@ const TESTS = [
   { i: 'true && false', o: 'true && false' },
   { i: 'prova', o: 'this["prova"]' },
   { i: 'params[0] + params[1]', o: 'this["params"] [ 0 ] + this["params"] [ 1 ]' },
-  { i: '1 === 2', o: '1 === 2' },
-  { i: 'res = factorial(params[0] - 1)', o: 'this["res"] = this["factorial"] ( this["params"] [ 0 ] - 1 )' }
+  { i: '1 == 2', o: '1 === 2' },
+  { i: 'res = factorial(params[0] - 1)', o: 'this["res"] = this["factorial"] ( this["params"] [ 0 ] - 1 )' },
 ]
 
 for (const test of TESTS) {

@@ -1,7 +1,7 @@
 // Based on https://github.com/marcbachmann/boolean-expression
 const _ = require('lodash')
 
-var allOperators = /(true|false|!|&&|\|\||\(|\)|\[|\]|===|=|,|\s)/g
+var allOperators = /(true|false|!|&&|\|\||\(|\)|\[|\]|===|==|=|,|\s)/g
 const accessArrayRegex = /^([a-zA-Z][a-zA-Z\d]*)\[([a-zA-Z\d]{0,})\]$/
 
 function isNumeric (str) {
@@ -41,10 +41,12 @@ Expression.prototype.toTokens = function toTokens () {
   .map(function (e) { return e.type === 'token' ? e.value : undefined })
 }
 
-var nativeOperators = /^(true|false|!|&&|\|\||\(|\)|\[|\]|===|=|,|\s)$/
+var nativeOperators = /^(true|false|!|&&|\|\||\(|\)|\[|\]|===|==|=|,|\s)$/
+var operatorMap = { '==': '===' }
 function rewrite (ex, el, i, all) {
   var t = el.trim()
   if (!t) return ex
+  if (operatorMap[t]) t = operatorMap[t]
   if (nativeOperators.test(t)) ex.push({type: 'operator', value: t})
   else ex.push({type: 'token', value: t.replace(/['\\]/g, '\\$&')})
   return ex
