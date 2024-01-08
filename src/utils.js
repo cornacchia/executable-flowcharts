@@ -182,12 +182,16 @@ function translateMemoryStateToHtml (memoryState) {
   for (const func in memoryState.memory) {
     htmlStr += '<strong> --- ' + func + ' --- </strong><br/>'
     htmlStr += '<p style="font-family=monospace;">'
-    for (const varName in memoryState.memory[func]) {
-      if (typeof memoryState.memory[func][varName] === 'function') continue
-      let varType = 'int'
-      if (typeof memoryState.memory[func][varName] === 'boolean') varType = 'bool'
-      else if (Array.isArray(memoryState.memory[func][varName])) varType = 'collection'
-      htmlStr += varName + '&nbsp;=&nbsp;' + getVariableStringRepresentation(varType, memoryState.memory[func][varName]) + '<br/>'
+    for (let i = 0; i < memoryState.memory[func].length; i++) {
+      const layer = memoryState.memory[func][i]
+      htmlStr += '>> Layer ' + i + '<br/>'
+      for (const varName in layer) {
+        if (typeof layer[varName] === 'function') continue
+        let varType = 'int'
+        if (typeof layer[varName] === 'boolean') varType = 'bool'
+        else if (Array.isArray(layer[varName])) varType = 'collection'
+        htmlStr += varName + '&nbsp;=&nbsp;' + getVariableStringRepresentation(varType, layer[varName]) + '<br/>'
+      }
     }
     htmlStr += '</p><hr/>'
   }
