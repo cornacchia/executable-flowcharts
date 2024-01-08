@@ -6,8 +6,11 @@ const OPTIONS = {
       'font-size': 16,
       fill: 'green'
     },
-    nop: {
+    nopNoModal: {
       fill: 'black'
+    },
+    nop: {
+      fill: '#303030'
     }
   }
 }

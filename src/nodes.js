@@ -33,6 +33,10 @@ const NODES = {
     type: 'nop',
     nodeType: 'operation'
   },
+  nopNoModal: {
+    type: 'nopNoModal',
+    nodeType: 'operation'
+  },
   output: {
     type: 'output',
     nodeType: 'inputoutput'
@@ -126,8 +130,8 @@ function createNewNode (type) {
   return newNode
 }
 
-function getNopNode (parent) {
-  const newNode = _.cloneDeep(NODES.nop)
+function getNopNode (parent, type) {
+  const newNode = _.cloneDeep(NODES[type])
   newNode.id = ++NOP_ID
   newNode.nopFor = parent.id
   newNode.parents = []
@@ -148,7 +152,7 @@ function getNewNode (type, data) {
   } else if (type === 'expression') {
     newNode.expressions = data.expressions
   } else if (type === 'condition') {
-    const closeConditionNode = getNopNode(newNode)
+    const closeConditionNode = getNopNode(newNode, 'nop')
     closeConditionNode.parents.push({ id: newNode.id, branch: 'yes' })
     closeConditionNode.parents.push({ id: newNode.id, branch: 'no' })
     newNode.children = {
@@ -162,8 +166,8 @@ function getNewNode (type, data) {
 
     result.push(closeConditionNode)
   } else if (type === 'loop') {
-    const loopRestartNode = getNopNode(newNode)
-    const loopEndNode = getNopNode(newNode)
+    const loopRestartNode = getNopNode(newNode, 'nopNoModal')
+    const loopEndNode = getNopNode(newNode, 'nop')
     loopRestartNode.parents.push({ id: newNode.id, branch: 'yes' })
     loopRestartNode.children.main = newNode.id
 
@@ -332,12 +336,13 @@ function severChildConnection (nodeObj, branch, nodes) {
 function convertToNodeLine (node) {
   let nodeStr = node.id + '=>'
   nodeStr += node.nodeType + ': '
-  if (node.type !== 'nop') {
+  if (node.type !== 'nopNoModal') {
     if (node.type !== 'nop') nodeStr += node.id + ') \n' + getNodeText(node.type, node)
     if (node.selected) nodeStr += '|selected'
+    else if (node.type === 'nop') nodeStr += '|nop'
     nodeStr += ':$nodeClickCallback'
   } else {
-    nodeStr += ' |nop'
+    nodeStr += ' |nopNoModal'
   }
 
   nodeStr += '\n'

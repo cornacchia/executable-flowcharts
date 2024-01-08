@@ -15,6 +15,7 @@ import LoopModal from './NodeModals/LoopModal'
 import OutputModal from './NodeModals/OutputModal'
 import ReturnValueModal from './NodeModals/ReturnValueModal'
 import FunctionCallModal from './NodeModals/FunctionCallModal'
+import NopModal from './NodeModals/NopModal'
 
 const _ = require('lodash')
 const nodesUtils = require('./nodes')
@@ -63,6 +64,7 @@ class Flow extends React.Component {
     this.shouldShowOutputModal = this.shouldShowOutputModal.bind(this)
     this.shouldShowReturnValueModal = this.shouldShowReturnValueModal.bind(this)
     this.shouldShowFunctionCallModal = this.shouldShowFunctionCallModal.bind(this)
+    this.shouldShowNopModal = this.shouldShowNopModal.bind(this)
     this.showExecutionFeedback = this.showExecutionFeedback.bind(this)
     this.setupFunctionBaseNodes = this.setupFunctionBaseNodes.bind(this)
     this.selectFunctionTab = this.selectFunctionTab.bind(this)
@@ -386,6 +388,12 @@ class Flow extends React.Component {
     (this.state.newNodeType === 'functionCall')
   }
 
+  shouldShowNopModal () {
+    return (!_.isNil(this.state.selectedNodeObj) &&
+    this.state.selectedNodeObj.type === 'nop') ||
+    (this.state.newNodeType === 'nop')
+  }
+
   render () {
     return (
       <div>
@@ -560,6 +568,15 @@ class Flow extends React.Component {
             addChildCallback={this.addNode}
             addNewNodeCallback={this.addFunction}
             updateNodeCallback={this.updateNode}
+          />
+        }
+
+        {this.shouldShowNopModal() &&
+          <NopModal
+            node={this.state.selectedNodeObj}
+            show={this.shouldShowNopModal()}
+            closeCallback={this.unselectNode}
+            addChildCallback={this.addNode}
           />
         }
 
